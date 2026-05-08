@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fitness Fusion Cloud Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200..800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
+        .glass-modal { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #e11d48; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .custom-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 2rem; }
+        .custom-card:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.05); }
+    </style>
+</head>
+<body class="text-slate-900">
+
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-slate-50 p-6 text-center">
+        <div class="loader mb-4"></div>
+        <h2 class="text-xl font-black text-slate-800 uppercase tracking-tighter italic">Fitness Fusion Live</h2>
+        <p id="loading-status" class="text-slate-400 text-sm mt-2 font-medium">Authenticating with Google...</p>
+        
+        <div id="error-actions" class="hidden mt-8 space-y-4">
+            <p class="text-rose-500 text-xs font-bold uppercase">Connection Issue Detected</p>
+            <div class="flex flex-col gap-2">
+                <button onclick="location.reload()" class="px-6 py-3 bg-slate-900 text-white rounded-2xl font-bold text-xs uppercase shadow-lg">Retry Connection</button>
+                <button onclick="forceStart()" class="px-6 py-3 bg-white border border-slate-200 text-slate-500 rounded-2xl font-bold text-xs uppercase">Enter Offline Mode</button>
+            </div>
+            <p class="text-[10px] text-slate-400 mt-4 max-w-xs">Tip: Ensure "Anonymous Auth" is enabled in your Firebase Console -> Authentication settings.</p>
+        </div>
+    </div>
+
+    <div id="app-root" class="flex flex-col md:flex-row min-h-screen hidden">
+        <!-- Sidebar -->
+        <aside class="w-full md:w-72 bg-white border-r border-slate-200 p-6 flex flex-col shadow-sm">
+            <div class="flex items-center gap-3 mb-10">
+                <div class="p-2.5 bg-rose-600 rounded-xl shadow-lg text-white">
+                    <i data-lucide="zap" class="w-6 h-6 stroke-[3]"></i>
+                </div>
+                <div class="flex flex-col">
+                    <h1 class="text-lg font-black tracking-tight leading-none uppercase">Fitness Fusion</h1>
+                    <span class="text-[10px] font-bold text-rose-600 uppercase tracking-widest text-nowrap">Soniya's Studio (JBP)</span>
+                </div>
+            </div>
+            
+            <nav class="space-y-1.5 flex-grow" id="nav-menu"></nav>
+
+            <div class="mt-auto p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
+                <div class="flex items-center justify-between mb-2">
+                    <span id="sync-label" class="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Syncing...</span>
+                    <i data-lucide="activity" class="w-3.5 h-3.5 text-emerald-500"></i>
+                </div>
+                <p id="cloud-status-text" class="text-[10px] text-emerald-700 font-bold uppercase leading-tight">Connecting...</p>
+            </div>
+        </aside>
+
+        <!-- Main Panel -->
+        <main class="flex-grow p-4 md:p-10 overflow-y-auto max-h-screen">
+            <header class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
+                <div>
+                    <h2 id="view-title" class="text-4xl font-black text-slate-900 tracking-tighter uppercase italic">Dashboard</h2>
+                </div>
+                <div class="flex flex-wrap gap-3">
+                    <button onclick="toggleModal('expense-modal', true)" class="bg-white border border-slate-200 text-slate-900 px-5 py-3 rounded-2xl font-bold flex items-center gap-2 text-sm hover:bg-slate-50 shadow-sm transition-all">
+                        <i data-lucide="minus-circle" class="w-4 h-4 text-rose-600"></i> Log Expense
+                    </button>
+                    <button onclick="toggleModal('member-modal', true)" class="bg-rose-600 hover:bg-rose-700 text-white px-7 py-3 rounded-2xl font-bold flex items-center gap-2 shadow-xl shadow-rose-200 transition-all">
+                        <i data-lucide="user-plus" class="w-5 h-5"></i> Enroll Member
+                    </button>
+                </div>
+            </header>
+
+            <div id="content-area"></div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="member-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 glass-modal hidden">
+        <div class="bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden">
+            <div class="bg-rose-600 p-10 text-white relative">
+                <h3 class="text-3xl font-black italic uppercase tracking-tighter leading-none">New Enrollment</h3>
+                <button onclick="toggleModal('member-modal', false)" class="absolute top-8 right-8 p-3 hover:bg-white/10 rounded-2xl transition-all"><i data-lucide="x"></i></button>
+            </div>
+            <form id="member-form" class="p-10 space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <input required name="name" placeholder="Full Name" class="w-full p-4 rounded-2xl border border-slate-100 bg-slate-50 outline-none focus:ring-4 focus:ring-rose-50" />
+                    <input required name="phone" placeholder="WhatsApp Number" class="w-full p-4 rounded-2xl border border-slate-100 bg-slate-50 outline-none" />
+                </div>
+                <div class="grid grid-cols-2 gap-5">
+                    <select name="batch" class="w-full p-4 rounded-2xl border border-slate-100 bg-slate-50 outline-none">
+                        <option>Morning (6AM - 7AM)</option>
+                        <option>Morning (7AM - 8AM)</option>
+                        <option>Evening (6PM - 7PM)</option>
+                        <option>Evening (7PM - 8PM)</option>
+                    </select>
+                    <input required name="fee" type="number" placeholder="Fee ($)" class="w-full p-4 rounded-2xl border border-slate-100 bg-slate-50 outline-none font-bold text-rose-600" />
+                </div>
+                <button type="submit" class="w-full bg-rose-600 text-white py-5 rounded-[1.5rem] font-black uppercase tracking-widest shadow-xl">Enroll & Sync</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="expense-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 glass-modal hidden">
+        <div class="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl p-10 border-t-8 border-rose-600">
+            <h3 class="text-2xl font-black uppercase tracking-tighter mb-8 flex items-center gap-3"><i data-lucide="minus-circle" class="text-rose-600 w-8 h-8"></i> Expense</h3>
+            <form id="expense-form" class="space-y-5">
+                <input required name="desc" placeholder="What was spent on?" class="w-full p-4 rounded-2xl border border-slate-100 bg-slate-50 outline-none" />
+                <input required name="amount" type="number" placeholder="Amount ($)" class="w-full p-4 rounded-2xl border border-slate-100 bg-slate-50 outline-none font-black text-rose-600" />
+                <div class="flex gap-4 pt-6">
+                    <button type="submit" class="flex-grow bg-slate-900 text-white py-4 rounded-2xl font-black uppercase text-xs">Confirm</button>
+                    <button type="button" onclick="toggleModal('expense-modal', false)" class="px-8 border border-slate-200 rounded-2xl font-black uppercase text-xs">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyB7ihh-uTbj736XQTJq9HawOqNxALlWOk8",
+            authDomain: "fitnessfusionbysoniyajbp.firebaseapp.com",
+            projectId: "fitnessfusionbysoniyajbp",
+            storageBucket: "fitnessfusionbysoniyajbp.firebasestorage.app",
+            messagingSenderId: "565141859435",
+            appId: "1:565141859435:web:96642963e5de47a2f8952e",
+            databaseURL: "https://fitnessfusionbysoniyajbp-default-rtdb.firebaseio.com/"
+        };
+
+        const statusLabel = document.getElementById('loading-status');
+        const errorActions = document.getElementById('error-actions');
+
+        // Force Start logic
+        window.forceStart = () => {
+            hideLoader();
+            document.getElementById('sync-label').innerText = "Offline Mode";
+            document.getElementById('cloud-status-text').innerText = "Local Session Active";
+            render();
+        };
+
+        // Fail-safe timeout
+        setTimeout(() => {
+            if (!document.getElementById('loading-screen').classList.contains('hidden')) {
+                statusLabel.innerText = "Still trying to connect...";
+                errorActions.classList.remove('hidden');
+            }
+        }, 6000);
+
+        try {
+            const app = initializeApp(firebaseConfig);
+            const auth = getAuth(app);
+            const rtdb = getDatabase(app);
+
+            const appState = { activeTab: 'dashboard', members: [], expenses: [], user: null };
+
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    appState.user = user;
+                    statusLabel.innerText = "Syncing with Cloud...";
+                    document.getElementById('cloud-status-text').innerText = "Connected to JBP Cloud";
+                    document.getElementById('sync-label').innerText = "Realtime Active";
+                    syncData();
+                } else {
+                    signInAnonymously(auth).catch(e => {
+                        console.error(e);
+                        statusLabel.innerText = "Sign-in Restricted. Enable Anonymous Auth.";
+                    });
+                }
+            });
+
+            function syncData() {
+                onValue(ref(rtdb, 'members'), (snapshot) => {
+                    const data = snapshot.val() || {};
+                    appState.members = Object.keys(data).map(key => ({ id: key, ...data[key] }));
+                    hideLoader();
+                    render();
+                }, (err) => {
+                    console.error("Rules Error", err);
+                    statusLabel.innerText = "Access Denied. Check Database Rules.";
+                });
+
+                onValue(ref(rtdb, 'expenses'), (snapshot) => {
+                    const data = snapshot.val() || {};
+                    appState.expenses = Object.keys(data).map(key => ({ id: key, ...data[key] }));
+                    render();
+                });
+            }
+
+            function hideLoader() {
+                document.getElementById('loading-screen').classList.add('hidden');
+                document.getElementById('app-root').classList.remove('hidden');
+            }
+
+            window.switchTab = (t) => { appState.activeTab = t; render(); };
+            window.toggleModal = (id, s) => document.getElementById(id).classList.toggle('hidden', !s);
+            window.deleteItem = async (path, id) => {
+                if(confirm("Permanently delete this entry?")) await remove(ref(rtdb, `${path}/${id}`));
+            };
+
+            document.getElementById('member-form').onsubmit = async (e) => {
+                e.preventDefault();
+                const fd = new FormData(e.target);
+                const data = {
+                    name: fd.get('name'), phone: fd.get('phone'), batch: fd.get('batch'), fee: Number(fd.get('fee')), date: new Date().toISOString()
+                };
+                if (appState.user) await push(ref(rtdb, 'members'), data);
+                else appState.members.push({id: Date.now(), ...data});
+                toggleModal('member-modal', false);
+                e.target.reset();
+                render();
+            };
+
+            document.getElementById('expense-form').onsubmit = async (e) => {
+                e.preventDefault();
+                const fd = new FormData(e.target);
+                const data = { desc: fd.get('desc'), amount: Number(fd.get('amount')), date: new Date().toISOString() };
+                if (appState.user) await push(ref(rtdb, 'expenses'), data);
+                else appState.expenses.push({id: Date.now(), ...data});
+                toggleModal('expense-modal', false);
+                e.target.reset();
+                render();
+            };
+
+            function render() {
+                const content = document.getElementById('content-area');
+                const nav = document.getElementById('nav-menu');
+                document.getElementById('view-title').innerText = appState.activeTab;
+
+                nav.innerHTML = [
+                    { id: 'dashboard', icon: 'layout-dashboard', label: 'Overview' },
+                    { id: 'members', icon: 'users', label: 'Members' },
+                    { id: 'finance', icon: 'wallet', label: 'Expenses' }
+                ].map(t => `
+                    <button onclick="switchTab('${t.id}')" class="w-full flex items-center gap-3 px-5 py-4 rounded-2xl font-bold transition-all text-sm ${appState.activeTab === t.id ? 'bg-rose-600 text-white shadow-xl shadow-rose-100' : 'text-slate-500 hover:bg-slate-50'}">
+                        <i data-lucide="${t.icon}" class="w-4 h-4"></i> ${t.label}
+                    </button>
+                `).join('');
+
+                if (appState.activeTab === 'dashboard') {
+                    const inc = appState.members.reduce((a, b) => a + (b.fee || 0), 0);
+                    const exp = appState.expenses.reduce((a, b) => a + (b.amount || 0), 0);
+                    content.innerHTML = `
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                            <div class="bg-white p-8 rounded-[2rem] border border-slate-200 custom-card">
+                                <div class="text-4xl font-black mb-1 text-emerald-600">$${inc}</div>
+                                <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Revenue</div>
+                            </div>
+                            <div class="bg-white p-8 rounded-[2rem] border border-slate-200 custom-card">
+                                <div class="text-4xl font-black mb-1 text-rose-600">$${exp}</div>
+                                <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Expenses</div>
+                            </div>
+                            <div class="bg-white p-8 rounded-[2rem] border border-slate-200 custom-card">
+                                <div class="text-4xl font-black mb-1">$${inc - exp}</div>
+                                <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Net Profit</div>
+                            </div>
+                        </div>
+                        <div class="bg-white p-10 rounded-[2.5rem] border border-slate-200 flex flex-col items-center">
+                             <h3 class="text-xs font-black uppercase text-slate-400 mb-8">Cash Flow Distribution</h3>
+                             <canvas id="mainChart" class="max-w-[250px]"></canvas>
+                        </div>
+                    `;
+                    setTimeout(() => {
+                        const ctx = document.getElementById('mainChart');
+                        if (ctx) new Chart(ctx, {
+                            type: 'doughnut',
+                            data: {
+                                labels: ['Profit', 'Expenses'],
+                                datasets: [{ data: [inc-exp, exp], backgroundColor: ['#10b981', '#f43f5e'], borderWidth: 0 }]
+                            },
+                            options: { cutout: '80%', plugins: { legend: { position: 'bottom' } } }
+                        });
+                    }, 100);
+                } else if (appState.activeTab === 'members') {
+                    content.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        ${appState.members.length === 0 ? '<p class="col-span-full text-center text-slate-400 py-20 font-bold">No members enrolled yet.</p>' : appState.members.map(m => `
+                            <div class="bg-white p-7 rounded-[2rem] border border-slate-200 custom-card">
+                                <div class="flex justify-between mb-4">
+                                    <span class="bg-rose-50 text-rose-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">${m.batch}</span>
+                                    <button onclick="deleteItem('members', '${m.id}')" class="text-slate-200 hover:text-rose-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                </div>
+                                <h4 class="font-black text-xl mb-1">${m.name}</h4>
+                                <p class="text-xs text-slate-400 font-bold mb-4">${m.phone}</p>
+                                <div class="bg-slate-900 text-white p-4 rounded-2xl text-center font-black">$${m.fee}/mo</div>
+                            </div>
+                        `).join('')}
+                    </div>`;
+                } else {
+                    content.innerHTML = `<div class="bg-white rounded-[2rem] border border-slate-200 overflow-hidden">
+                        <table class="w-full text-left text-sm">
+                            <tr class="bg-slate-50 text-[10px] font-black uppercase text-slate-400 tracking-widest border-b border-slate-100">
+                                <th class="p-6">Description</th><th class="p-6 text-right">Amount</th><th class="p-6"></th>
+                            </tr>
+                            ${appState.expenses.length === 0 ? '<tr><td colspan="3" class="p-20 text-center text-slate-400 font-bold">No expenses logged.</td></tr>' : appState.expenses.map(e => `
+                                <tr class="border-b border-slate-50">
+                                    <td class="p-6 font-bold text-slate-700">${e.desc}</td>
+                                    <td class="p-6 text-right font-black text-rose-600">-$${e.amount}</td>
+                                    <td class="p-6 text-right"><button onclick="deleteItem('expenses', '${e.id}')" class="text-slate-200 hover:text-rose-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td>
+                                </tr>
+                            `).join('')}
+                        </table>
+                    </div>`;
+                }
+                lucide.createIcons();
+            }
+        } catch (e) {
+            statusLabel.innerText = "Critical Error. Check Console.";
+        }
+    </script>
+</body>
+</html>
