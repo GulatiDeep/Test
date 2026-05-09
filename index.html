@@ -851,6 +851,66 @@
       gap: 8px;
     }
 
+    .member-form-hero {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: 44px minmax(0, 1fr);
+      gap: 12px;
+      align-items: center;
+      padding: 14px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #ecfdf5, #eff6ff);
+      border: 1px solid #cdece6;
+    }
+
+    .member-form-hero span {
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      background: #0f766e;
+      color: #fff;
+    }
+
+    .member-form-hero strong,
+    .member-form-hero small {
+      display: block;
+    }
+
+    .member-form-hero small {
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    .fee-summary {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      padding: 12px;
+      border-radius: 8px;
+      background: #111827;
+      color: #fff;
+    }
+
+    .fee-summary div {
+      display: grid;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .fee-summary span {
+      color: #aeb8c7;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .fee-summary strong {
+      font-size: 16px;
+      overflow-wrap: anywhere;
+    }
+
     .mobile-tabs {
       display: none;
       position: fixed;
@@ -879,6 +939,47 @@
     .mobile-tabs button.active {
       background: #1f2937;
       color: #fff;
+    }
+
+    .quick-add {
+      position: fixed;
+      left: 16px;
+      bottom: 88px;
+      z-index: 110;
+      display: grid;
+      gap: 10px;
+      justify-items: start;
+    }
+
+    .quick-add-menu {
+      display: none;
+      gap: 8px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 18px 42px rgba(15, 23, 42, .18);
+    }
+
+    .quick-add.open .quick-add-menu {
+      display: grid;
+    }
+
+    .quick-add-menu button {
+      min-width: 168px;
+      justify-content: flex-start;
+    }
+
+    .quick-add-toggle {
+      width: 56px;
+      height: 56px;
+      border-radius: 999px;
+      border: 0;
+      background: var(--primary);
+      color: #fff;
+      display: grid;
+      place-items: center;
+      box-shadow: 0 18px 38px rgba(15, 118, 110, .34);
     }
 
     @media (min-width: 1200px) {
@@ -914,6 +1015,9 @@
         grid-template-columns: minmax(220px, 1fr) auto auto;
       }
       .mobile-tabs { display: grid; }
+      .quick-add {
+        bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+      }
       .hero-dashboard { grid-template-columns: 1fr; }
       .members-grid {
         grid-template-columns: repeat(2, minmax(280px, 1fr));
@@ -926,6 +1030,9 @@
       }
       .expense-card {
         max-width: none;
+      }
+      .fee-summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
     }
 
@@ -964,6 +1071,9 @@
         grid-column: 1 / -1;
       }
       .mobile-tabs { display: grid; }
+      .quick-add {
+        bottom: calc(84px + env(safe-area-inset-bottom, 0px));
+      }
       .hero-dashboard { grid-template-columns: 1fr; }
       .kpis, .two-col, .form-grid { grid-template-columns: 1fr; }
       .dashboard-kpis {
@@ -1085,7 +1195,6 @@
         <div class="toolbar">
           <span class="role-pill" id="rolePill"><i data-lucide="shield-check"></i>Loading</span>
           <button class="btn" data-admin-only onclick="exportData()"><i data-lucide="download"></i>Export</button>
-          <button class="btn" data-admin-only onclick="resetDemoData()"><i data-lucide="refresh-cw"></i>Demo</button>
         </div>
       </div>
 
@@ -1100,6 +1209,15 @@
     <button data-view-button="expenses" onclick="setView('expenses')" aria-label="Expenses"><i data-lucide="receipt-text"></i></button>
   </nav>
 
+  <div class="quick-add hidden" id="quickAdd">
+    <div class="quick-add-menu" id="quickAddMenu">
+      <button class="btn" onclick="quickAddAction('member')"><i data-lucide="user-plus"></i>New member</button>
+      <button class="btn" onclick="quickAddAction('payment')"><i data-lucide="indian-rupee"></i>New payment</button>
+      <button class="btn" onclick="quickAddAction('expense')"><i data-lucide="receipt-text"></i>New expense</button>
+    </div>
+    <button class="quick-add-toggle" onclick="toggleQuickAdd()" aria-label="Quick add"><i data-lucide="plus"></i></button>
+  </div>
+
   <div class="modal" id="memberModal" aria-hidden="true">
     <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="memberModalTitle">
       <header>
@@ -1109,14 +1227,26 @@
       <form id="memberForm">
         <input type="hidden" name="id">
         <div class="form-grid">
+          <div class="member-form-hero">
+            <span><i data-lucide="user-round-plus"></i></span>
+            <div>
+              <strong>Member enrollment</strong>
+              <small>Plan, fee, discounts, and expiry are calculated automatically.</small>
+            </div>
+          </div>
           <div class="field"><label>Name</label><input name="name" required></div>
           <div class="field"><label>Phone</label><input name="phone" required inputmode="tel"></div>
-          <div class="field"><label>Plan</label><select name="plan"><option>Monthly</option><option>Quarterly</option><option>Half yearly</option><option>Annual</option><option>Personal training</option></select></div>
+          <div class="field"><label>Address</label><input name="address" placeholder="Member address"></div>
+          <div class="field"><label>Plan</label><select name="plan"><option>Monthly</option><option>Quarterly</option><option>Half yearly</option><option>Annually</option></select></div>
           <div class="field"><label>Trainer</label><input name="trainer" placeholder="Optional"></div>
           <div class="field"><label>Join date</label><input name="joinDate" type="date" required></div>
           <div class="field"><label>Expiry date</label><input name="expiryDate" type="date" required readonly></div>
-          <div class="field"><label>Total fee</label><input name="fee" type="number" min="0" step="1" required></div>
+          <div class="field"><label>Plan fee</label><input name="planFee" type="number" min="0" step="1" readonly></div>
+          <div class="field"><label>Plan discount</label><input name="planDiscount" type="number" min="0" step="1" value="0"></div>
+          <div class="field"><label>One-time discount</label><input name="oneTimeDiscount" type="number" min="0" step="1" value="0"></div>
+          <div class="field"><label>Total fee</label><input name="fee" type="number" min="0" step="1" required readonly></div>
           <div class="field"><label>Initial paid</label><input name="initialPaid" type="number" min="0" step="1" value="0"></div>
+          <div class="fee-summary" id="memberFeeSummary"></div>
           <div class="field" style="grid-column:1 / -1"><label>Personal notes</label><textarea name="notes" placeholder="Ailments, injury history, restrictions, preferences, or anything specific to the member"></textarea></div>
           <div class="payment-history" id="memberPaymentHistory"></div>
         </div>
@@ -1256,6 +1386,7 @@
       document.getElementById("loginScreen").classList.remove("hidden");
       document.getElementById("appShell").classList.add("hidden");
       document.querySelector(".mobile-tabs").classList.add("hidden");
+      document.getElementById("quickAdd").classList.add("hidden");
       document.getElementById("loginError").textContent = message;
       refreshIcons();
     }
@@ -1264,6 +1395,7 @@
       document.getElementById("loginScreen").classList.add("hidden");
       document.getElementById("appShell").classList.remove("hidden");
       document.querySelector(".mobile-tabs").classList.remove("hidden");
+      document.getElementById("quickAdd").classList.remove("hidden");
       document.getElementById("rolePill").innerHTML = `<i data-lucide="${isAdmin() ? "shield-check" : "badge-check"}"></i>${capitalize(session.role)}`;
       document.getElementById("sidebarRole").textContent = `${capitalize(session.role)} workspace`;
       updateAdminControls();
@@ -1326,32 +1458,50 @@
       return push(ref(db, path)).key;
     }
 
+    const planConfig = {
+      Monthly: { months: 1, fee: 999 },
+      Quarterly: { months: 3, fee: 2799 },
+      "Half yearly": { months: 6, fee: 5499 },
+      Annually: { months: 12, fee: 9999 }
+    };
+
     function planMonths(plan) {
-      const durations = {
-        Monthly: 1,
-        Quarterly: 3,
-        "Half yearly": 6,
-        Annual: 12,
-        "Personal training": 1
-      };
-      return durations[plan] || 1;
+      return planConfig[plan]?.months || 1;
+    }
+
+    function basePlanFee(plan) {
+      return planConfig[plan]?.fee || 999;
     }
 
     function planExpiry(joinDate, plan) {
       return addMonths(joinDate || today, planMonths(plan));
     }
 
-    function updateMemberExpiry() {
+    function updateMemberPricing() {
       const form = document.getElementById("memberForm");
+      const planFee = basePlanFee(form.elements.plan.value);
+      const planDiscount = Math.max(Number(form.elements.planDiscount.value || 0), 0);
+      const oneTimeDiscount = Math.max(Number(form.elements.oneTimeDiscount.value || 0), 0);
+      const totalDiscount = Math.min(planFee, planDiscount + oneTimeDiscount);
+      const finalFee = Math.max(planFee - totalDiscount, 0);
+      const initialPaid = Math.max(Number(form.elements.initialPaid.value || 0), 0);
+      form.elements.planFee.value = planFee;
+      form.elements.fee.value = finalFee;
       form.elements.expiryDate.value = planExpiry(form.elements.joinDate.value, form.elements.plan.value);
+      document.getElementById("memberFeeSummary").innerHTML = `
+        <div><span>Plan fee</span><strong>${money(planFee)}</strong></div>
+        <div><span>Discount</span><strong>${money(totalDiscount)}</strong></div>
+        <div><span>Final fee</span><strong>${money(finalFee)}</strong></div>
+        <div><span>Balance</span><strong>${money(Math.max(finalFee - initialPaid, 0))}</strong></div>
+      `;
     }
 
     function demoData() {
       const members = [
-        { id: "m_1", name: "Aarav Sharma", phone: "9876543210", plan: "Monthly", trainer: "Rohit", joinDate: "2026-05-01", expiryDate: "2026-06-01", fee: 1800, notes: "Prefers evening strength sessions." },
-        { id: "m_2", name: "Priya Verma", phone: "9822011220", plan: "Quarterly", trainer: "Nisha", joinDate: "2026-04-15", expiryDate: "2026-07-15", fee: 4800, notes: "Knee pain; avoid jumping movements." },
-        { id: "m_3", name: "Kabir Khan", phone: "9900990099", plan: "Monthly", trainer: "", joinDate: "2026-04-05", expiryDate: "2026-05-05", fee: 1800, notes: "Call before renewal." },
-        { id: "m_4", name: "Neha Patel", phone: "9810010101", plan: "Personal training", trainer: "Rohit", joinDate: "2026-05-03", expiryDate: "2026-06-03", fee: 6500, notes: "Lower back stiffness; start with mobility." }
+        { id: "m_1", name: "Aarav Sharma", phone: "9876543210", address: "Jabalpur", plan: "Monthly", trainer: "Rohit", joinDate: "2026-05-01", expiryDate: "2026-06-01", planFee: 999, planDiscount: 0, oneTimeDiscount: 0, fee: 999, notes: "Prefers evening strength sessions." },
+        { id: "m_2", name: "Priya Verma", phone: "9822011220", address: "Civil Lines", plan: "Quarterly", trainer: "Nisha", joinDate: "2026-04-15", expiryDate: "2026-07-15", planFee: 2799, planDiscount: 0, oneTimeDiscount: 100, fee: 2699, notes: "Knee pain; avoid jumping movements." },
+        { id: "m_3", name: "Kabir Khan", phone: "9900990099", address: "Napier Town", plan: "Monthly", trainer: "", joinDate: "2026-04-05", expiryDate: "2026-05-05", planFee: 999, planDiscount: 0, oneTimeDiscount: 0, fee: 999, notes: "Call before renewal." },
+        { id: "m_4", name: "Neha Patel", phone: "9810010101", address: "Madan Mahal", plan: "Annually", trainer: "Rohit", joinDate: "2026-05-03", expiryDate: "2027-05-03", planFee: 9999, planDiscount: 500, oneTimeDiscount: 0, fee: 9499, notes: "Lower back stiffness; start with mobility." }
       ];
 
       const payments = [
@@ -1465,8 +1615,6 @@
         </section>
         <div class="filters dashboard-controls">
           <div class="field"><label>Month</label><input type="month" value="${month}" onchange="filters.month=this.value; render()"></div>
-          <button class="btn primary" onclick="openPaymentModal()"><i data-lucide="circle-dollar-sign"></i>Payment</button>
-          <button class="btn" onclick="openExpenseModal()"><i data-lucide="receipt-text"></i>Expense</button>
         </div>
         <div class="grid kpis dashboard-kpis">
           ${metric("Monthly revenue", money(revenue), "Collected payments", "trending-up", "", "openDashboardDetail('payments')")}
@@ -1588,7 +1736,6 @@
         <div class="filters">
           <div class="field"><label>Search</label><input id="memberSearch" value="${escapeAttribute(filters.query)}" oninput="searchMembers(this.value)" placeholder="Name, phone, plan, trainer, notes"></div>
           <div class="field"><label>Status</label><select onchange="filters.status=this.value; renderMembers()">${statusOptions()}</select></div>
-          <button class="btn primary" onclick="openMemberModal()"><i data-lucide="user-plus"></i>Member</button>
         </div>
         <div id="memberResults">${memberResultsHtml(filtered)}</div>
       `;
@@ -1622,11 +1769,8 @@
     }
 
     function memberCard(member) {
-      const paid = memberPaid(member.id);
       const balance = memberBalance(member);
-      const progress = Number(member.fee) ? Math.min((paid / Number(member.fee)) * 100, 100) : 0;
       const status = memberStatus(member);
-      const note = member.notes || member.goal || "No personal notes added.";
       return `<article class="card member-card ${status}">
         <div class="member-head">
           <div class="avatar">${escapeHtml(initials(member.name))}</div>
@@ -1638,21 +1782,14 @@
         </div>
         <div class="member-facts">
           <div class="fact"><span><i data-lucide="badge-check"></i>Plan</span><strong>${escapeHtml(member.plan)}</strong></div>
-          <div class="fact"><span><i data-lucide="user-round-check"></i>Trainer</span><strong>${escapeHtml(member.trainer || "General")}</strong></div>
-          <div class="fact"><span><i data-lucide="wallet"></i>Paid</span><strong>${money(paid)}</strong></div>
           <div class="fact"><span><i data-lucide="calendar-clock"></i>Expiry</span><strong>${member.expiryDate}</strong></div>
         </div>
-        <div>
-          <div class="progress"><span style="width:${progress}%"></span></div>
-          <div style="display:flex;justify-content:space-between;gap:10px;margin-top:7px;color:var(--muted);font-size:13px">
-            <span>${statusLabel(member)}</span>
-            <strong style="color:${balance > 0 ? "var(--warning)" : "var(--income)"}">${balance > 0 ? `${money(balance)} due` : "Paid"}</strong>
-          </div>
+        <div style="display:flex;justify-content:space-between;gap:10px;color:var(--muted);font-size:13px">
+          <span>${statusLabel(member)}</span>
+          <strong style="color:${balance > 0 ? "var(--warning)" : "var(--income)"}">${balance > 0 ? `${money(balance)} due` : "Paid"}</strong>
         </div>
-        <div class="member-note"><i data-lucide="heart-pulse"></i> ${escapeHtml(note)}</div>
         <div class="member-actions">
-          <button class="btn icon" onclick="openPaymentModal('${member.id}')" aria-label="Add payment" title="Add payment"><i data-lucide="circle-dollar-sign"></i></button>
-          <button class="btn icon" onclick="renewMember('${member.id}')" aria-label="Renew" title="Renew"><i data-lucide="repeat-2"></i></button>
+          <button class="btn icon" onclick="openPaymentModal('${member.id}')" aria-label="Add payment" title="Add payment"><i data-lucide="indian-rupee"></i></button>
           <button class="btn icon" onclick="sendReminder('${member.id}')" aria-label="Reminder" title="Reminder"><i data-lucide="message-circle"></i></button>
           <button class="btn icon" onclick="openMemberModal('${member.id}')" aria-label="Edit" title="Edit"><i data-lucide="pencil"></i></button>
           ${isAdmin() ? `<button class="btn icon danger" onclick="deleteMember('${member.id}')" aria-label="Delete" title="Delete"><i data-lucide="trash-2"></i></button>` : ""}
@@ -1688,7 +1825,6 @@
         <div class="filters">
           <div class="field"><label>Month</label><input type="month" value="${filters.month}" onchange="filters.month=this.value; renderPayments()"></div>
           <div class="field"><label>Total</label><input value="${money(payments.reduce((sum, p) => sum + Number(p.amount || 0), 0))}" disabled></div>
-          <button class="btn primary" onclick="openPaymentModal()"><i data-lucide="circle-dollar-sign"></i>Payment</button>
         </div>
         <div class="table-wrap">
           <table>
@@ -1717,7 +1853,6 @@
         <div class="filters">
           <div class="field"><label>Month</label><input type="month" value="${filters.month}" onchange="filters.month=this.value; renderExpenses()"></div>
           <div class="field"><label>Total</label><input value="${money(monthlyTotal)}" disabled></div>
-          <button class="btn primary" onclick="openExpenseModal()"><i data-lucide="receipt-text"></i>Expense</button>
         </div>
         <div class="grid two-col">
           <section class="panel">
@@ -1780,8 +1915,10 @@
       const form = document.getElementById("memberForm");
       form.reset();
       form.elements.joinDate.value = today;
-      updateMemberExpiry();
+      form.elements.planDiscount.value = 0;
+      form.elements.oneTimeDiscount.value = 0;
       form.elements.initialPaid.value = 0;
+      updateMemberPricing();
       document.getElementById("memberPaymentHistory").innerHTML = "";
       document.getElementById("memberModalTitle").textContent = id ? "Edit member" : "Add member";
 
@@ -1793,7 +1930,10 @@
         });
         if (!member.notes && member.goal) form.elements.notes.value = member.goal;
         form.elements.id.value = id;
-        form.elements.expiryDate.value = planExpiry(form.elements.joinDate.value, form.elements.plan.value);
+        form.elements.planFee.value = member.planFee || basePlanFee(form.elements.plan.value);
+        form.elements.planDiscount.value = member.planDiscount || 0;
+        form.elements.oneTimeDiscount.value = member.oneTimeDiscount || 0;
+        updateMemberPricing();
         form.elements.initialPaid.disabled = true;
         const payments = state.payments.filter(p => p.memberId === id).sort((a, b) => b.date.localeCompare(a.date));
         document.getElementById("memberPaymentHistory").innerHTML = `
@@ -1846,22 +1986,52 @@
       document.getElementById(id).setAttribute("aria-hidden", "true");
     }
 
-    document.getElementById("memberForm").elements.plan.addEventListener("change", updateMemberExpiry);
-    document.getElementById("memberForm").elements.joinDate.addEventListener("change", updateMemberExpiry);
+    function toggleQuickAdd(forceOpen) {
+      const quickAdd = document.getElementById("quickAdd");
+      const shouldOpen = typeof forceOpen === "boolean" ? forceOpen : !quickAdd.classList.contains("open");
+      quickAdd.classList.toggle("open", shouldOpen);
+      refreshIcons();
+    }
+
+    function quickAddAction(type) {
+      toggleQuickAdd(false);
+      if (type === "member") openMemberModal();
+      if (type === "payment") openPaymentModal();
+      if (type === "expense") openExpenseModal();
+    }
+
+    document.addEventListener("click", event => {
+      const quickAdd = document.getElementById("quickAdd");
+      if (!quickAdd || quickAdd.classList.contains("hidden") || quickAdd.contains(event.target)) return;
+      quickAdd.classList.remove("open");
+    });
+
+    ["plan", "joinDate", "planDiscount", "oneTimeDiscount", "initialPaid"].forEach(fieldName => {
+      document.getElementById("memberForm").elements[fieldName].addEventListener("input", updateMemberPricing);
+      document.getElementById("memberForm").elements[fieldName].addEventListener("change", updateMemberPricing);
+    });
 
     document.getElementById("memberForm").addEventListener("submit", async event => {
       event.preventDefault();
       const form = event.currentTarget;
       const data = Object.fromEntries(new FormData(form));
       const id = data.id || newKey("members");
+      const planFee = basePlanFee(data.plan);
+      const planDiscount = Math.max(Number(data.planDiscount || 0), 0);
+      const oneTimeDiscount = Math.max(Number(data.oneTimeDiscount || 0), 0);
+      const fee = Math.max(planFee - Math.min(planFee, planDiscount + oneTimeDiscount), 0);
       const member = {
         name: data.name.trim(),
         phone: data.phone.trim(),
+        address: data.address.trim(),
         plan: data.plan,
         trainer: data.trainer.trim(),
         joinDate: data.joinDate,
         expiryDate: planExpiry(data.joinDate, data.plan),
-        fee: Number(data.fee || 0),
+        planFee,
+        planDiscount,
+        oneTimeDiscount,
+        fee,
         notes: data.notes.trim()
       };
       await set(ref(db, `members/${id}`), member);
@@ -1914,15 +2084,6 @@
       await set(ref(db, `expenses/${id}`), expense);
       closeModal("expenseModal");
     });
-
-    async function renewMember(id) {
-      const member = state.members.find(m => m.id === id);
-      if (!member) return;
-      await update(ref(db, `members/${id}`), {
-        joinDate: today,
-        expiryDate: addMonths(member.expiryDate > today ? member.expiryDate : today, planMonths(member.plan))
-      });
-    }
 
     async function deleteMember(id) {
       if (!requireAdmin("Deleting members")) return;
@@ -2027,7 +2188,8 @@
     window.searchMembers = searchMembers;
     window.openDashboardDetail = openDashboardDetail;
     window.cardKeyOpen = cardKeyOpen;
-    window.renewMember = renewMember;
+    window.toggleQuickAdd = toggleQuickAdd;
+    window.quickAddAction = quickAddAction;
     window.deleteMember = deleteMember;
     window.deletePayment = deletePayment;
     window.deleteExpense = deleteExpense;
