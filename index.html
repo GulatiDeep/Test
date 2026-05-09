@@ -1,317 +1,1958 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fitness Fusion Cloud Manager</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200..800&display=swap');
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8fafc; }
-        .glass-modal { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
-        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #e11d48; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .custom-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border-radius: 2rem; }
-        .custom-card:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.05); }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fitness Fusion Gym Manager</title>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --ink: #172033;
+      --muted: #687282;
+      --line: #dde2ea;
+      --primary: #0f766e;
+      --primary-soft: #d9f3ef;
+      --income: #15803d;
+      --expense: #c2410c;
+      --danger: #b91c1c;
+      --warning: #a16207;
+      --blue: #2563eb;
+      --shadow: 0 16px 34px rgba(31, 41, 55, .08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+    }
+
+    .hidden { display: none !important; }
+
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; }
+
+    .app-shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1fr);
+    }
+
+    .login-screen {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(360px, 520px);
+      background:
+        linear-gradient(135deg, rgba(17, 24, 39, .92), rgba(15, 118, 110, .82)),
+        url("https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1800&q=80") center/cover;
+      color: #fff;
+    }
+
+    .login-hero {
+      padding: 48px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 100vh;
+    }
+
+    .login-hero h1 {
+      margin: 0;
+      max-width: 720px;
+      font-size: clamp(42px, 8vw, 88px);
+      line-height: .94;
+      letter-spacing: 0;
+    }
+
+    .login-hero p {
+      max-width: 560px;
+      color: #d7fff7;
+      font-size: 18px;
+      line-height: 1.6;
+    }
+
+    .login-panel {
+      background: rgba(255, 255, 255, .96);
+      color: var(--ink);
+      padding: 34px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      box-shadow: -20px 0 60px rgba(0, 0, 0, .18);
+    }
+
+    .login-card {
+      display: grid;
+      gap: 16px;
+    }
+
+    .login-card h2 {
+      margin: 0;
+      font-size: 30px;
+    }
+
+    .login-card > p {
+      margin: -6px 0 8px;
+      color: var(--muted);
+    }
+
+    .login-error {
+      min-height: 22px;
+      color: var(--danger);
+      font-weight: 800;
+      font-size: 13px;
+    }
+
+    .role-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 40px;
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fff;
+      color: var(--muted);
+      font-weight: 800;
+    }
+
+    .sidebar {
+      background: #111827;
+      color: #fff;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-height: 44px;
+    }
+
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      background: #14b8a6;
+      color: #052e2b;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.1;
+    }
+
+    .brand p {
+      margin: 3px 0 0;
+      color: #aeb8c7;
+      font-size: 13px;
+    }
+
+    .nav {
+      display: grid;
+      gap: 8px;
+    }
+
+    .nav button, .sidebar-action {
+      width: 100%;
+      border: 0;
+      border-radius: 8px;
+      padding: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: transparent;
+      color: #d7dde8;
+      text-align: left;
+    }
+
+    .nav button.active {
+      background: #1f2937;
+      color: #fff;
+      box-shadow: inset 3px 0 0 #14b8a6;
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      display: grid;
+      gap: 10px;
+    }
+
+    .content {
+      min-width: 0;
+      padding: 26px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 22px;
+    }
+
+    .topbar h2 {
+      margin: 0;
+      font-size: clamp(24px, 3vw, 36px);
+      letter-spacing: 0;
+    }
+
+    .topbar p {
+      margin: 6px 0 0;
+      color: var(--muted);
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      min-height: 40px;
+      padding: 9px 12px;
+      background: #fff;
+      color: var(--ink);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .btn.primary {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    .btn.danger {
+      color: var(--danger);
+      border-color: #f0c6c6;
+      background: #fff7f7;
+    }
+
+    .btn.icon {
+      width: 40px;
+      padding: 0;
+    }
+
+    .grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .kpis {
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    }
+
+    .dashboard-kpis {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .dashboard-kpis .metric:last-child {
+      grid-column: 1 / -1;
+    }
+
+    .two-col {
+      grid-template-columns: minmax(0, 1.35fr) minmax(320px, .65fr);
+      align-items: start;
+    }
+
+    .panel, .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .panel {
+      padding: 18px;
+    }
+
+    .panel-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .panel-title h3 {
+      margin: 0;
+      font-size: 17px;
+    }
+
+    .metric {
+      padding: 16px;
+      min-height: 132px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .clickable-card {
+      cursor: pointer;
+      transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+    }
+
+    .clickable-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(15, 118, 110, .45);
+      box-shadow: 0 20px 42px rgba(31, 41, 55, .12);
+    }
+
+    .clickable-card:focus-visible {
+      outline: 3px solid rgba(20, 184, 166, .28);
+      outline-offset: 3px;
+    }
+
+    .metric::after {
+      content: "";
+      position: absolute;
+      right: -36px;
+      top: -42px;
+      width: 110px;
+      height: 110px;
+      border-radius: 999px;
+      background: rgba(20, 184, 166, .12);
+      pointer-events: none;
+    }
+
+    .metric .label {
+      color: var(--muted);
+      font-size: 13px;
+      margin: 0 0 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .metric strong {
+      display: block;
+      font-size: clamp(24px, 3vw, 34px);
+      line-height: 1;
+    }
+
+    .metric small {
+      display: block;
+      color: var(--muted);
+      margin-top: 10px;
+    }
+
+    .profit-positive strong { color: var(--income); }
+    .profit-negative strong { color: var(--danger); }
+
+    .hero-dashboard {
+      background:
+        linear-gradient(135deg, rgba(17, 24, 39, .94), rgba(15, 118, 110, .88)),
+        url("https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1800&q=80") center/cover;
+      color: #fff;
+      border-radius: 8px;
+      padding: 24px;
+      margin-bottom: 16px;
+      min-height: 230px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(260px, .9fr);
+      gap: 24px;
+      align-items: end;
+      box-shadow: 0 22px 50px rgba(15, 23, 42, .18);
+    }
+
+    .hero-dashboard h3 {
+      margin: 0;
+      font-size: clamp(34px, 5vw, 60px);
+      line-height: .98;
+    }
+
+    .hero-dashboard p {
+      margin: 12px 0 0;
+      color: #d8fff7;
+      max-width: 560px;
+    }
+
+    .hero-profit {
+      background: rgba(255, 255, 255, .12);
+      border: 1px solid rgba(255, 255, 255, .18);
+      border-radius: 8px;
+      padding: 18px;
+      backdrop-filter: blur(10px);
+    }
+
+    .hero-profit span {
+      color: #b7fff4;
+      font-size: 13px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .hero-profit strong {
+      display: block;
+      font-size: clamp(34px, 5vw, 58px);
+      margin-top: 6px;
+    }
+
+    .filters {
+      display: grid;
+      grid-template-columns: minmax(220px, 1fr) 170px 170px;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .dashboard-controls {
+      grid-template-columns: minmax(180px, 1fr) auto auto;
+      align-items: end;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .field label {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 800;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      min-height: 42px;
+      padding: 10px 12px;
+      color: var(--ink);
+      background: #fff;
+      outline: 0;
+    }
+
+    textarea {
+      min-height: 84px;
+      resize: vertical;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: #14b8a6;
+      box-shadow: 0 0 0 3px rgba(20, 184, 166, .16);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 13px 10px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: middle;
+      font-size: 14px;
+    }
+
+    th {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0;
+      background: #fafbfc;
+    }
+
+    tr:last-child td { border-bottom: 0; }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    .name-cell {
+      min-width: 210px;
+    }
+
+    .name-cell strong {
+      display: block;
+    }
+
+    .name-cell span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .badge {
+      border-radius: 999px;
+      padding: 5px 9px;
+      font-size: 12px;
+      font-weight: 800;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+    }
+
+    .badge.active { background: #dcfce7; color: #166534; }
+    .badge.due { background: #fef3c7; color: var(--warning); }
+    .badge.expired { background: #fee2e2; color: var(--danger); }
+    .badge.neutral { background: #eef2ff; color: #3730a3; }
+
+    .progress {
+      width: 100%;
+      height: 10px;
+      background: #edf0f4;
+      border-radius: 999px;
+      overflow: hidden;
+      min-width: 110px;
+    }
+
+    .progress span {
+      display: block;
+      height: 100%;
+      background: var(--primary);
+    }
+
+    .members-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 360px));
+      gap: 14px;
+      align-items: stretch;
+    }
+
+    .member-card {
+      padding: 16px;
+      display: grid;
+      gap: 14px;
+      max-width: 360px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .member-card::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto;
+      height: 4px;
+      background: linear-gradient(90deg, #14b8a6, #2563eb);
+    }
+
+    .member-card.expired::before { background: linear-gradient(90deg, #ef4444, #f97316); }
+    .member-card.due::before { background: linear-gradient(90deg, #f59e0b, #14b8a6); }
+
+    .member-head {
+      display: grid;
+      grid-template-columns: 44px minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+      padding-top: 4px;
+    }
+
+    .avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      background: var(--primary-soft);
+      color: var(--primary);
+      font-weight: 900;
+    }
+
+    .member-head strong,
+    .member-head span {
+      display: block;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .member-head span {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 2px;
+    }
+
+    .member-facts {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .fact {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+      display: grid;
+      gap: 5px;
+      min-height: 74px;
+      background: #fbfcfd;
+    }
+
+    .fact span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .fact strong {
+      font-size: 15px;
+      overflow-wrap: anywhere;
+    }
+
+    .member-note {
+      min-height: 48px;
+      border-radius: 8px;
+      background: #f8fafc;
+      border: 1px solid var(--line);
+      padding: 10px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .member-actions {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(40px, 1fr));
+      gap: 8px;
+    }
+
+    .expense-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 340px));
+      gap: 14px;
+    }
+
+    .expense-card {
+      max-width: 340px;
+      padding: 15px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .expense-head {
+      display: grid;
+      grid-template-columns: 42px minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .expense-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      background: #fff7ed;
+      color: var(--expense);
+    }
+
+    .expense-head strong,
+    .expense-head span {
+      display: block;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .expense-head span {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 2px;
+    }
+
+    .expense-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding-top: 10px;
+      border-top: 1px solid var(--line);
+    }
+
+    .list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .list-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .list-row strong, .list-row span {
+      display: block;
+    }
+
+    .list-row span {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 3px;
+    }
+
+    .amount-income { color: var(--income); font-weight: 900; }
+    .amount-expense { color: var(--expense); font-weight: 900; }
+
+    .chart {
+      height: 260px;
+      display: flex;
+      align-items: end;
+      gap: 10px;
+      border-left: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      padding: 12px 8px 0;
+    }
+
+    .bar-group {
+      flex: 1;
+      height: 100%;
+      display: grid;
+      grid-template-rows: 1fr auto;
+      gap: 8px;
+      min-width: 44px;
+    }
+
+    .bars {
+      height: 100%;
+      display: flex;
+      align-items: end;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .bar {
+      width: 14px;
+      min-height: 4px;
+      border-radius: 4px 4px 0 0;
+    }
+
+    .bar.income { background: var(--income); }
+    .bar.expense { background: var(--expense); }
+    .bar-label {
+      color: var(--muted);
+      font-size: 12px;
+      text-align: center;
+    }
+
+    .empty {
+      padding: 28px;
+      border: 1px dashed #cbd5e1;
+      border-radius: 8px;
+      text-align: center;
+      color: var(--muted);
+      background: #fff;
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, .58);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      z-index: 20;
+    }
+
+    .modal.open { display: flex; }
+
+    .dialog {
+      width: min(680px, 100%);
+      max-height: 92vh;
+      overflow: auto;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 24px 60px rgba(15, 23, 42, .26);
+    }
+
+    .dialog header {
+      position: sticky;
+      top: 0;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 18px;
+      border-bottom: 1px solid var(--line);
+      z-index: 1;
+    }
+
+    .dialog h3 {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    .dialog form {
+      padding: 18px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .form-actions {
+      display: flex;
+      justify-content: end;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding-top: 6px;
+    }
+
+    .payment-history {
+      grid-column: 1 / -1;
+      border-top: 1px solid var(--line);
+      padding-top: 14px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .mobile-tabs {
+      display: none;
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: #111827;
+      padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      z-index: 30;
+      box-shadow: 0 -14px 34px rgba(15, 23, 42, .18);
+    }
+
+    .mobile-tabs button {
+      border: 0;
+      border-radius: 8px;
+      min-height: 48px;
+      color: #d7dde8;
+      background: transparent;
+      display: grid;
+      place-items: center;
+    }
+
+    .mobile-tabs button.active {
+      background: #1f2937;
+      color: #fff;
+    }
+
+    @media (max-width: 980px) {
+      .login-screen { grid-template-columns: 1fr; }
+      .login-hero {
+        min-height: 42vh;
+        padding: 28px;
+      }
+      .login-panel { padding: 24px; }
+      .app-shell { display: block; }
+      .sidebar { display: none; }
+      .content { padding: 18px 14px calc(104px + env(safe-area-inset-bottom)); }
+      .kpis, .two-col { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .filters { grid-template-columns: 1fr; }
+      .dashboard-controls {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .dashboard-controls .field {
+        grid-column: 1 / -1;
+      }
+      .mobile-tabs { display: grid; }
+      .hero-dashboard { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 640px) {
+      .topbar {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .toolbar .btn {
+        flex: 1 1 auto;
+      }
+
+      .kpis, .two-col, .form-grid { grid-template-columns: 1fr; }
+      .dashboard-kpis {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      .dashboard-kpis .metric {
+        min-width: 0;
+      }
+      .dashboard-kpis .metric strong {
+        font-size: clamp(20px, 8vw, 28px);
+      }
+      .dashboard-kpis .metric:last-child {
+        grid-column: 1 / -1;
+      }
+      .metric { min-height: 110px; }
+      .chart { height: 210px; overflow-x: auto; }
+      .bar-group { min-width: 54px; }
+      th, td { padding: 11px 8px; }
+      .members-grid {
+        grid-template-columns: 1fr;
+      }
+      .member-card {
+        max-width: none;
+      }
+      .expense-grid {
+        grid-template-columns: 1fr;
+      }
+      .expense-card {
+        max-width: none;
+      }
+    }
+  </style>
 </head>
-<body class="text-slate-900">
-
-    <!-- Loading Screen -->
-    <div id="loading-screen" class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-slate-50 p-6 text-center">
-        <div class="loader mb-4"></div>
-        <h2 class="text-xl font-black text-slate-800 uppercase tracking-tighter italic">Fitness Fusion Live</h2>
-        <p id="loading-status" class="text-slate-400 text-sm mt-2 font-medium">Authenticating with Google...</p>
-        
-        <div id="error-actions" class="hidden mt-8 space-y-4">
-            <p class="text-rose-500 text-xs font-bold uppercase">Connection Issue Detected</p>
-            <div class="flex flex-col gap-2">
-                <button onclick="location.reload()" class="px-6 py-3 bg-slate-900 text-white rounded-2xl font-bold text-xs uppercase shadow-lg">Retry Connection</button>
-                <button onclick="forceStart()" class="px-6 py-3 bg-white border border-slate-200 text-slate-500 rounded-2xl font-bold text-xs uppercase">Enter Offline Mode</button>
-            </div>
-            <p class="text-[10px] text-slate-400 mt-4 max-w-xs">Tip: Ensure "Anonymous Auth" is enabled in your Firebase Console -> Authentication settings.</p>
+<body>
+  <section class="login-screen" id="loginScreen">
+    <div class="login-hero">
+      <div class="brand">
+        <div class="brand-mark"><i data-lucide="dumbbell"></i></div>
+        <div>
+          <h1 style="font-size:20px;line-height:1.1">Fitness Fusion</h1>
+          <p style="margin:3px 0 0;color:#d7fff7;font-size:13px">Realtime gym management</p>
         </div>
+      </div>
+      <div>
+        <h1>Run the gym from one dashboard.</h1>
+        <p>Members, collections, dues, expenses, renewals, and profit status connected to Firebase Realtime Database.</p>
+      </div>
     </div>
-
-    <div id="app-root" class="flex flex-col md:flex-row min-h-screen hidden">
-        <!-- Sidebar -->
-        <aside class="w-full md:w-72 bg-white border-r border-slate-200 p-6 flex flex-col shadow-sm">
-            <div class="flex items-center gap-3 mb-10">
-                <div class="p-2.5 bg-rose-600 rounded-xl shadow-lg text-white">
-                    <i data-lucide="zap" class="w-6 h-6 stroke-[3]"></i>
-                </div>
-                <div class="flex flex-col">
-                    <h1 class="text-lg font-black tracking-tight leading-none uppercase">Fitness Fusion</h1>
-                    <span class="text-[10px] font-bold text-rose-600 uppercase tracking-widest text-nowrap">Soniya's Studio (JBP)</span>
-                </div>
-            </div>
-            
-            <nav class="space-y-1.5 flex-grow" id="nav-menu"></nav>
-
-            <div class="mt-auto p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
-                <div class="flex items-center justify-between mb-2">
-                    <span id="sync-label" class="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Syncing...</span>
-                    <i data-lucide="activity" class="w-3.5 h-3.5 text-emerald-500"></i>
-                </div>
-                <p id="cloud-status-text" class="text-[10px] text-emerald-700 font-bold uppercase leading-tight">Connecting...</p>
-            </div>
-        </aside>
-
-        <!-- Main Panel -->
-        <main class="flex-grow p-4 md:p-10 overflow-y-auto max-h-screen">
-            <header class="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
-                <div>
-                    <h2 id="view-title" class="text-4xl font-black text-slate-900 tracking-tighter uppercase italic">Dashboard</h2>
-                </div>
-                <div class="flex flex-wrap gap-3">
-                    <button onclick="toggleModal('expense-modal', true)" class="bg-white border border-slate-200 text-slate-900 px-5 py-3 rounded-2xl font-bold flex items-center gap-2 text-sm hover:bg-slate-50 shadow-sm transition-all">
-                        <i data-lucide="minus-circle" class="w-4 h-4 text-rose-600"></i> Log Expense
-                    </button>
-                    <button onclick="toggleModal('member-modal', true)" class="bg-rose-600 hover:bg-rose-700 text-white px-7 py-3 rounded-2xl font-bold flex items-center gap-2 shadow-xl shadow-rose-200 transition-all">
-                        <i data-lucide="user-plus" class="w-5 h-5"></i> Enroll Member
-                    </button>
-                </div>
-            </header>
-
-            <div id="content-area"></div>
-        </main>
-    </div>
-
-    <!-- Modals -->
-    <div id="member-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 glass-modal hidden">
-        <div class="bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden">
-            <div class="bg-rose-600 p-10 text-white relative">
-                <h3 class="text-3xl font-black italic uppercase tracking-tighter leading-none">New Enrollment</h3>
-                <button onclick="toggleModal('member-modal', false)" class="absolute top-8 right-8 p-3 hover:bg-white/10 rounded-2xl transition-all"><i data-lucide="x"></i></button>
-            </div>
-            <form id="member-form" class="p-10 space-y-6">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <input required name="name" placeholder="Full Name" class="w-full p-4 rounded-2xl border border-slate-100 bg-slate-50 outline-none focus:ring-4 focus:ring-rose-50" />
-                    <input required name="phone" placeholder="WhatsApp Number" class="w-full p-4 rounded-2xl border border-slate-100 bg-slate-50 outline-none" />
-                </div>
-                <div class="grid grid-cols-2 gap-5">
-                    <select name="batch" class="w-full p-4 rounded-2xl border border-slate-100 bg-slate-50 outline-none">
-                        <option>Morning (6AM - 7AM)</option>
-                        <option>Morning (7AM - 8AM)</option>
-                        <option>Evening (6PM - 7PM)</option>
-                        <option>Evening (7PM - 8PM)</option>
-                    </select>
-                    <input required name="fee" type="number" placeholder="Fee ($)" class="w-full p-4 rounded-2xl border border-slate-100 bg-slate-50 outline-none font-bold text-rose-600" />
-                </div>
-                <button type="submit" class="w-full bg-rose-600 text-white py-5 rounded-[1.5rem] font-black uppercase tracking-widest shadow-xl">Enroll & Sync</button>
-            </form>
+    <div class="login-panel">
+      <form class="login-card" id="loginForm">
+        <div>
+          <h2>Login</h2>
+          <p>Choose your role and sign in with Firebase Auth.</p>
         </div>
-    </div>
-
-    <div id="expense-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 glass-modal hidden">
-        <div class="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl p-10 border-t-8 border-rose-600">
-            <h3 class="text-2xl font-black uppercase tracking-tighter mb-8 flex items-center gap-3"><i data-lucide="minus-circle" class="text-rose-600 w-8 h-8"></i> Expense</h3>
-            <form id="expense-form" class="space-y-5">
-                <input required name="desc" placeholder="What was spent on?" class="w-full p-4 rounded-2xl border border-slate-100 bg-slate-50 outline-none" />
-                <input required name="amount" type="number" placeholder="Amount ($)" class="w-full p-4 rounded-2xl border border-slate-100 bg-slate-50 outline-none font-black text-rose-600" />
-                <div class="flex gap-4 pt-6">
-                    <button type="submit" class="flex-grow bg-slate-900 text-white py-4 rounded-2xl font-black uppercase text-xs">Confirm</button>
-                    <button type="button" onclick="toggleModal('expense-modal', false)" class="px-8 border border-slate-200 rounded-2xl font-black uppercase text-xs">Cancel</button>
-                </div>
-            </form>
+        <div class="field">
+          <label>Email</label>
+          <input id="loginEmail" type="email" autocomplete="email" required>
         </div>
+        <div class="field">
+          <label>Password</label>
+          <input id="loginPassword" type="password" autocomplete="current-password" required>
+        </div>
+        <div class="field">
+          <label>Login as</label>
+          <select id="loginRole">
+            <option value="admin">Admin</option>
+            <option value="manager">Manager</option>
+          </select>
+        </div>
+        <button class="btn primary" type="submit"><i data-lucide="log-in"></i>Login</button>
+        <div class="login-error" id="loginError"></div>
+      </form>
     </div>
+  </section>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+  <div class="app-shell hidden" id="appShell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark"><i data-lucide="dumbbell"></i></div>
+        <div>
+          <h1>Fitness Fusion</h1>
+          <p id="sidebarRole">Gym operations</p>
+        </div>
+      </div>
+      <nav class="nav" aria-label="Primary">
+        <button class="active" data-view-button="dashboard" onclick="setView('dashboard')"><i data-lucide="layout-dashboard"></i>Dashboard</button>
+        <button data-view-button="members" onclick="setView('members')"><i data-lucide="users"></i>Members</button>
+        <button data-view-button="payments" onclick="setView('payments')"><i data-lucide="wallet-cards"></i>Payments</button>
+        <button data-view-button="expenses" onclick="setView('expenses')"><i data-lucide="receipt-text"></i>Expenses</button>
+      </nav>
+      <div class="sidebar-footer">
+        <button class="sidebar-action" onclick="logout()"><i data-lucide="log-out"></i>Logout</button>
+      </div>
+    </aside>
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyB7ihh-uTbj736XQTJq9HawOqNxALlWOk8",
-            authDomain: "fitnessfusionbysoniyajbp.firebaseapp.com",
-            projectId: "fitnessfusionbysoniyajbp",
-            storageBucket: "fitnessfusionbysoniyajbp.firebasestorage.app",
-            messagingSenderId: "565141859435",
-            appId: "1:565141859435:web:96642963e5de47a2f8952e",
-            databaseURL: "https://fitnessfusionbysoniyajbp-default-rtdb.firebaseio.com/"
-        };
+    <main class="content">
+      <div class="topbar">
+        <div>
+          <h2 id="viewTitle">Dashboard</h2>
+          <p id="viewSubtitle">Profitability, dues, renewals, and attendance-ready member status.</p>
+        </div>
+        <div class="toolbar">
+          <span class="role-pill" id="rolePill"><i data-lucide="shield-check"></i>Loading</span>
+          <button class="btn" data-admin-only onclick="exportData()"><i data-lucide="download"></i>Export</button>
+          <button class="btn" data-admin-only onclick="resetDemoData()"><i data-lucide="refresh-cw"></i>Demo</button>
+        </div>
+      </div>
 
-        const statusLabel = document.getElementById('loading-status');
-        const errorActions = document.getElementById('error-actions');
+      <section id="viewRoot"></section>
+    </main>
+  </div>
 
-        // Force Start logic
-        window.forceStart = () => {
-            hideLoader();
-            document.getElementById('sync-label').innerText = "Offline Mode";
-            document.getElementById('cloud-status-text').innerText = "Local Session Active";
-            render();
-        };
+  <nav class="mobile-tabs" aria-label="Mobile primary">
+    <button class="active" data-view-button="dashboard" onclick="setView('dashboard')" aria-label="Dashboard"><i data-lucide="layout-dashboard"></i></button>
+    <button data-view-button="members" onclick="setView('members')" aria-label="Members"><i data-lucide="users"></i></button>
+    <button data-view-button="payments" onclick="setView('payments')" aria-label="Payments"><i data-lucide="wallet-cards"></i></button>
+    <button data-view-button="expenses" onclick="setView('expenses')" aria-label="Expenses"><i data-lucide="receipt-text"></i></button>
+  </nav>
 
-        // Fail-safe timeout
-        setTimeout(() => {
-            if (!document.getElementById('loading-screen').classList.contains('hidden')) {
-                statusLabel.innerText = "Still trying to connect...";
-                errorActions.classList.remove('hidden');
-            }
-        }, 6000);
+  <div class="modal" id="memberModal" aria-hidden="true">
+    <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="memberModalTitle">
+      <header>
+        <h3 id="memberModalTitle">Member</h3>
+        <button class="btn icon" onclick="closeModal('memberModal')" aria-label="Close"><i data-lucide="x"></i></button>
+      </header>
+      <form id="memberForm">
+        <input type="hidden" name="id">
+        <div class="form-grid">
+          <div class="field"><label>Name</label><input name="name" required></div>
+          <div class="field"><label>Phone</label><input name="phone" required inputmode="tel"></div>
+          <div class="field"><label>Plan</label><select name="plan"><option>Monthly</option><option>Quarterly</option><option>Half yearly</option><option>Annual</option><option>Personal training</option></select></div>
+          <div class="field"><label>Trainer</label><input name="trainer" placeholder="Optional"></div>
+          <div class="field"><label>Join date</label><input name="joinDate" type="date" required></div>
+          <div class="field"><label>Expiry date</label><input name="expiryDate" type="date" required readonly></div>
+          <div class="field"><label>Total fee</label><input name="fee" type="number" min="0" step="1" required></div>
+          <div class="field"><label>Initial paid</label><input name="initialPaid" type="number" min="0" step="1" value="0"></div>
+          <div class="field" style="grid-column:1 / -1"><label>Personal notes</label><textarea name="notes" placeholder="Ailments, injury history, restrictions, preferences, or anything specific to the member"></textarea></div>
+          <div class="payment-history" id="memberPaymentHistory"></div>
+        </div>
+        <div class="form-actions">
+          <button class="btn" type="button" onclick="closeModal('memberModal')">Cancel</button>
+          <button class="btn primary" type="submit"><i data-lucide="save"></i>Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
-        try {
-            const app = initializeApp(firebaseConfig);
-            const auth = getAuth(app);
-            const rtdb = getDatabase(app);
+  <div class="modal" id="paymentModal" aria-hidden="true">
+    <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="paymentModalTitle">
+      <header>
+        <h3 id="paymentModalTitle">Payment</h3>
+        <button class="btn icon" onclick="closeModal('paymentModal')" aria-label="Close"><i data-lucide="x"></i></button>
+      </header>
+      <form id="paymentForm">
+        <input type="hidden" name="memberId">
+        <div class="form-grid">
+          <div class="field"><label>Member</label><select name="memberSelect" required></select></div>
+          <div class="field"><label>Amount</label><input name="amount" type="number" min="1" step="1" required></div>
+          <div class="field"><label>Date</label><input name="date" type="date" required></div>
+          <div class="field"><label>Mode</label><select name="mode"><option>UPI</option><option>Cash</option><option>Card</option><option>Bank transfer</option></select></div>
+          <div class="field" style="grid-column:1 / -1"><label>Note</label><input name="note" placeholder="Monthly fee, renewal, admission, etc."></div>
+        </div>
+        <div class="form-actions">
+          <button class="btn" type="button" onclick="closeModal('paymentModal')">Cancel</button>
+          <button class="btn primary" type="submit"><i data-lucide="save"></i>Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
-            const appState = { activeTab: 'dashboard', members: [], expenses: [], user: null };
+  <div class="modal" id="expenseModal" aria-hidden="true">
+    <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="expenseModalTitle">
+      <header>
+        <h3 id="expenseModalTitle">Expense</h3>
+        <button class="btn icon" onclick="closeModal('expenseModal')" aria-label="Close"><i data-lucide="x"></i></button>
+      </header>
+      <form id="expenseForm">
+        <input type="hidden" name="id">
+        <div class="form-grid">
+          <div class="field"><label>Title</label><input name="title" required></div>
+          <div class="field"><label>Amount</label><input name="amount" type="number" min="1" step="1" required></div>
+          <div class="field"><label>Date</label><input name="date" type="date" required></div>
+          <div class="field"><label>Category</label><select name="category"><option>Rent</option><option>Salary</option><option>Electricity</option><option>Equipment</option><option>Marketing</option><option>Maintenance</option><option>Other</option></select></div>
+          <div class="field" style="grid-column:1 / -1"><label>Note</label><input name="note"></div>
+        </div>
+        <div class="form-actions">
+          <button class="btn" type="button" onclick="closeModal('expenseModal')">Cancel</button>
+          <button class="btn primary" type="submit"><i data-lucide="save"></i>Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
-            onAuthStateChanged(auth, (user) => {
-                if (user) {
-                    appState.user = user;
-                    statusLabel.innerText = "Syncing with Cloud...";
-                    document.getElementById('cloud-status-text').innerText = "Connected to JBP Cloud";
-                    document.getElementById('sync-label').innerText = "Realtime Active";
-                    syncData();
-                } else {
-                    signInAnonymously(auth).catch(e => {
-                        console.error(e);
-                        statusLabel.innerText = "Sign-in Restricted. Enable Anonymous Auth.";
-                    });
-                }
-            });
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getDatabase, ref, push, onValue, set, update, remove, get } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
 
-            function syncData() {
-                onValue(ref(rtdb, 'members'), (snapshot) => {
-                    const data = snapshot.val() || {};
-                    appState.members = Object.keys(data).map(key => ({ id: key, ...data[key] }));
-                    hideLoader();
-                    render();
-                }, (err) => {
-                    console.error("Rules Error", err);
-                    statusLabel.innerText = "Access Denied. Check Database Rules.";
-                });
+    const firebaseConfig = {
+      apiKey: "AIzaSyB7ihh-uTbj736XQTJq9HawOqNxALlWOk8",
+      authDomain: "fitnessfusionbysoniyajbp.firebaseapp.com",
+      projectId: "fitnessfusionbysoniyajbp",
+      storageBucket: "fitnessfusionbysoniyajbp.firebasestorage.app",
+      messagingSenderId: "565141859435",
+      appId: "1:565141859435:web:96642963e5de47a2f8952e",
+      databaseURL: "https://fitnessfusionbysoniyajbp-default-rtdb.firebaseio.com/"
+    };
 
-                onValue(ref(rtdb, 'expenses'), (snapshot) => {
-                    const data = snapshot.val() || {};
-                    appState.expenses = Object.keys(data).map(key => ({ id: key, ...data[key] }));
-                    render();
-                });
-            }
+    const firebaseApp = initializeApp(firebaseConfig);
+    const auth = getAuth(firebaseApp);
+    const db = getDatabase(firebaseApp);
+    const numberFormat = new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 });
+    const today = new Date().toISOString().slice(0, 10);
+    const state = { members: [], payments: [], expenses: [] };
+    const session = { user: null, role: "manager", dataReady: false, unsubscribers: [] };
+    let activeView = "dashboard";
+    let filters = { query: "", status: "all", month: today.slice(0, 7) };
 
-            function hideLoader() {
-                document.getElementById('loading-screen').classList.add('hidden');
-                document.getElementById('app-root').classList.remove('hidden');
-            }
+    const titles = {
+      dashboard: ["Dashboard", "Profitability, dues, renewals, and attendance-ready member status."],
+      members: ["Members", "Member records, balances, expiry alerts, renewals, and WhatsApp reminders."],
+      payments: ["Payments", "Income ledger with mode, member, date, and outstanding balance tracking."],
+      expenses: ["Expenses", "Operational costs grouped by category for clear profit visibility."]
+    };
 
-            window.switchTab = (t) => { appState.activeTab = t; render(); };
-            window.toggleModal = (id, s) => document.getElementById(id).classList.toggle('hidden', !s);
-            window.deleteItem = async (path, id) => {
-                if(confirm("Permanently delete this entry?")) await remove(ref(rtdb, `${path}/${id}`));
-            };
+    onAuthStateChanged(auth, async user => {
+      stopSync();
+      session.user = user;
+      session.dataReady = false;
+      if (!user) {
+        showLogin();
+        return;
+      }
 
-            document.getElementById('member-form').onsubmit = async (e) => {
-                e.preventDefault();
-                const fd = new FormData(e.target);
-                const data = {
-                    name: fd.get('name'), phone: fd.get('phone'), batch: fd.get('batch'), fee: Number(fd.get('fee')), date: new Date().toISOString()
-                };
-                if (appState.user) await push(ref(rtdb, 'members'), data);
-                else appState.members.push({id: Date.now(), ...data});
-                toggleModal('member-modal', false);
-                e.target.reset();
-                render();
-            };
+      try {
+        const requestedRole = localStorage.getItem("fitness-fusion-role") || "manager";
+        const profileRef = ref(db, `users/${user.uid}`);
+        const profileSnapshot = await get(profileRef);
+        const profile = profileSnapshot.val();
 
-            document.getElementById('expense-form').onsubmit = async (e) => {
-                e.preventDefault();
-                const fd = new FormData(e.target);
-                const data = { desc: fd.get('desc'), amount: Number(fd.get('amount')), date: new Date().toISOString() };
-                if (appState.user) await push(ref(rtdb, 'expenses'), data);
-                else appState.expenses.push({id: Date.now(), ...data});
-                toggleModal('expense-modal', false);
-                e.target.reset();
-                render();
-            };
-
-            function render() {
-                const content = document.getElementById('content-area');
-                const nav = document.getElementById('nav-menu');
-                document.getElementById('view-title').innerText = appState.activeTab;
-
-                nav.innerHTML = [
-                    { id: 'dashboard', icon: 'layout-dashboard', label: 'Overview' },
-                    { id: 'members', icon: 'users', label: 'Members' },
-                    { id: 'finance', icon: 'wallet', label: 'Expenses' }
-                ].map(t => `
-                    <button onclick="switchTab('${t.id}')" class="w-full flex items-center gap-3 px-5 py-4 rounded-2xl font-bold transition-all text-sm ${appState.activeTab === t.id ? 'bg-rose-600 text-white shadow-xl shadow-rose-100' : 'text-slate-500 hover:bg-slate-50'}">
-                        <i data-lucide="${t.icon}" class="w-4 h-4"></i> ${t.label}
-                    </button>
-                `).join('');
-
-                if (appState.activeTab === 'dashboard') {
-                    const inc = appState.members.reduce((a, b) => a + (b.fee || 0), 0);
-                    const exp = appState.expenses.reduce((a, b) => a + (b.amount || 0), 0);
-                    content.innerHTML = `
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                            <div class="bg-white p-8 rounded-[2rem] border border-slate-200 custom-card">
-                                <div class="text-4xl font-black mb-1 text-emerald-600">$${inc}</div>
-                                <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Revenue</div>
-                            </div>
-                            <div class="bg-white p-8 rounded-[2rem] border border-slate-200 custom-card">
-                                <div class="text-4xl font-black mb-1 text-rose-600">$${exp}</div>
-                                <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Expenses</div>
-                            </div>
-                            <div class="bg-white p-8 rounded-[2rem] border border-slate-200 custom-card">
-                                <div class="text-4xl font-black mb-1">$${inc - exp}</div>
-                                <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Net Profit</div>
-                            </div>
-                        </div>
-                        <div class="bg-white p-10 rounded-[2.5rem] border border-slate-200 flex flex-col items-center">
-                             <h3 class="text-xs font-black uppercase text-slate-400 mb-8">Cash Flow Distribution</h3>
-                             <canvas id="mainChart" class="max-w-[250px]"></canvas>
-                        </div>
-                    `;
-                    setTimeout(() => {
-                        const ctx = document.getElementById('mainChart');
-                        if (ctx) new Chart(ctx, {
-                            type: 'doughnut',
-                            data: {
-                                labels: ['Profit', 'Expenses'],
-                                datasets: [{ data: [inc-exp, exp], backgroundColor: ['#10b981', '#f43f5e'], borderWidth: 0 }]
-                            },
-                            options: { cutout: '80%', plugins: { legend: { position: 'bottom' } } }
-                        });
-                    }, 100);
-                } else if (appState.activeTab === 'members') {
-                    content.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        ${appState.members.length === 0 ? '<p class="col-span-full text-center text-slate-400 py-20 font-bold">No members enrolled yet.</p>' : appState.members.map(m => `
-                            <div class="bg-white p-7 rounded-[2rem] border border-slate-200 custom-card">
-                                <div class="flex justify-between mb-4">
-                                    <span class="bg-rose-50 text-rose-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">${m.batch}</span>
-                                    <button onclick="deleteItem('members', '${m.id}')" class="text-slate-200 hover:text-rose-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                                </div>
-                                <h4 class="font-black text-xl mb-1">${m.name}</h4>
-                                <p class="text-xs text-slate-400 font-bold mb-4">${m.phone}</p>
-                                <div class="bg-slate-900 text-white p-4 rounded-2xl text-center font-black">$${m.fee}/mo</div>
-                            </div>
-                        `).join('')}
-                    </div>`;
-                } else {
-                    content.innerHTML = `<div class="bg-white rounded-[2rem] border border-slate-200 overflow-hidden">
-                        <table class="w-full text-left text-sm">
-                            <tr class="bg-slate-50 text-[10px] font-black uppercase text-slate-400 tracking-widest border-b border-slate-100">
-                                <th class="p-6">Description</th><th class="p-6 text-right">Amount</th><th class="p-6"></th>
-                            </tr>
-                            ${appState.expenses.length === 0 ? '<tr><td colspan="3" class="p-20 text-center text-slate-400 font-bold">No expenses logged.</td></tr>' : appState.expenses.map(e => `
-                                <tr class="border-b border-slate-50">
-                                    <td class="p-6 font-bold text-slate-700">${e.desc}</td>
-                                    <td class="p-6 text-right font-black text-rose-600">-$${e.amount}</td>
-                                    <td class="p-6 text-right"><button onclick="deleteItem('expenses', '${e.id}')" class="text-slate-200 hover:text-rose-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td>
-                                </tr>
-                            `).join('')}
-                        </table>
-                    </div>`;
-                }
-                lucide.createIcons();
-            }
-        } catch (e) {
-            statusLabel.innerText = "Critical Error. Check Console.";
+        if (profile?.role && profile.role !== requestedRole) {
+          await signOut(auth);
+          showLogin(`This account is registered as ${profile.role}. Choose ${profile.role} to login.`);
+          return;
         }
-    </script>
+
+        session.role = profile?.role || requestedRole;
+        if (!profile) {
+          await set(profileRef, { email: user.email || "", role: session.role, createdAt: Date.now() });
+        }
+        showApp();
+        startSync();
+      } catch (error) {
+        showLogin(error.message);
+      }
+    });
+
+    document.getElementById("loginForm").addEventListener("submit", async event => {
+      event.preventDefault();
+      document.getElementById("loginError").textContent = "";
+      const role = document.getElementById("loginRole").value;
+      localStorage.setItem("fitness-fusion-role", role);
+      try {
+        await signInWithEmailAndPassword(auth, document.getElementById("loginEmail").value, document.getElementById("loginPassword").value);
+      } catch (error) {
+        document.getElementById("loginError").textContent = friendlyAuthError(error.message);
+      }
+    });
+
+    function showLogin(message = "") {
+      session.user = null;
+      session.dataReady = false;
+      document.getElementById("loginScreen").classList.remove("hidden");
+      document.getElementById("appShell").classList.add("hidden");
+      document.querySelector(".mobile-tabs").classList.add("hidden");
+      document.getElementById("loginError").textContent = message;
+      refreshIcons();
+    }
+
+    function showApp() {
+      document.getElementById("loginScreen").classList.add("hidden");
+      document.getElementById("appShell").classList.remove("hidden");
+      document.querySelector(".mobile-tabs").classList.remove("hidden");
+      document.getElementById("rolePill").innerHTML = `<i data-lucide="${isAdmin() ? "shield-check" : "badge-check"}"></i>${capitalize(session.role)}`;
+      document.getElementById("sidebarRole").textContent = `${capitalize(session.role)} workspace`;
+      updateAdminControls();
+      render();
+    }
+
+    function startSync() {
+      session.unsubscribers = [
+        onValue(ref(db, "members"), snapshot => {
+          state.members = toArray(snapshot.val());
+          session.dataReady = true;
+          render();
+        }),
+        onValue(ref(db, "payments"), snapshot => {
+          state.payments = toArray(snapshot.val());
+          render();
+        }),
+        onValue(ref(db, "expenses"), snapshot => {
+          state.expenses = toArray(snapshot.val());
+          render();
+        })
+      ];
+    }
+
+    function stopSync() {
+      session.unsubscribers.forEach(unsubscribe => unsubscribe());
+      session.unsubscribers = [];
+    }
+
+    function toArray(data) {
+      if (!data) return [];
+      return Object.entries(data).map(([id, value]) => ({ ...value, id }));
+    }
+
+    function toObject(rows) {
+      return rows.reduce((all, row) => {
+        const { id, ...rest } = row;
+        all[id] = rest;
+        return all;
+      }, {});
+    }
+
+    function isAdmin() {
+      return session.role === "admin";
+    }
+
+    function requireAdmin(action = "This action") {
+      if (isAdmin()) return true;
+      alert(`${action} is available only for Admin login.`);
+      return false;
+    }
+
+    function updateAdminControls() {
+      document.querySelectorAll("[data-admin-only]").forEach(element => {
+        element.classList.toggle("hidden", !isAdmin());
+      });
+    }
+
+    function newKey(path) {
+      return push(ref(db, path)).key;
+    }
+
+    function planMonths(plan) {
+      const durations = {
+        Monthly: 1,
+        Quarterly: 3,
+        "Half yearly": 6,
+        Annual: 12,
+        "Personal training": 1
+      };
+      return durations[plan] || 1;
+    }
+
+    function planExpiry(joinDate, plan) {
+      return addMonths(joinDate || today, planMonths(plan));
+    }
+
+    function updateMemberExpiry() {
+      const form = document.getElementById("memberForm");
+      form.elements.expiryDate.value = planExpiry(form.elements.joinDate.value, form.elements.plan.value);
+    }
+
+    function demoData() {
+      const members = [
+        { id: "m_1", name: "Aarav Sharma", phone: "9876543210", plan: "Monthly", trainer: "Rohit", joinDate: "2026-05-01", expiryDate: "2026-06-01", fee: 1800, notes: "Prefers evening strength sessions." },
+        { id: "m_2", name: "Priya Verma", phone: "9822011220", plan: "Quarterly", trainer: "Nisha", joinDate: "2026-04-15", expiryDate: "2026-07-15", fee: 4800, notes: "Knee pain; avoid jumping movements." },
+        { id: "m_3", name: "Kabir Khan", phone: "9900990099", plan: "Monthly", trainer: "", joinDate: "2026-04-05", expiryDate: "2026-05-05", fee: 1800, notes: "Call before renewal." },
+        { id: "m_4", name: "Neha Patel", phone: "9810010101", plan: "Personal training", trainer: "Rohit", joinDate: "2026-05-03", expiryDate: "2026-06-03", fee: 6500, notes: "Lower back stiffness; start with mobility." }
+      ];
+
+      const payments = [
+        { id: "p_1", memberId: "m_1", amount: 1800, date: "2026-05-01", mode: "UPI", note: "Monthly fee" },
+        { id: "p_2", memberId: "m_2", amount: 3000, date: "2026-04-15", mode: "Cash", note: "Quarterly part payment" },
+        { id: "p_3", memberId: "m_3", amount: 1000, date: "2026-04-05", mode: "UPI", note: "Monthly part payment" },
+        { id: "p_4", memberId: "m_4", amount: 6500, date: "2026-05-03", mode: "Card", note: "PT plan" },
+        { id: "p_5", memberId: "m_2", amount: 900, date: "2026-05-02", mode: "UPI", note: "Balance payment" }
+      ];
+
+      const expenses = [
+        { id: "e_1", title: "Gym rent", amount: 22000, date: "2026-05-01", category: "Rent", note: "" },
+        { id: "e_2", title: "Trainer salary", amount: 18000, date: "2026-05-05", category: "Salary", note: "" },
+        { id: "e_3", title: "Treadmill service", amount: 3500, date: "2026-05-07", category: "Maintenance", note: "" },
+        { id: "e_4", title: "Instagram ads", amount: 2500, date: "2026-04-20", category: "Marketing", note: "" }
+      ];
+      return { members, payments, expenses };
+    }
+
+    function memberPaid(memberId) {
+      return state.payments.filter(p => p.memberId === memberId).reduce((sum, p) => sum + Number(p.amount || 0), 0);
+    }
+
+    function memberBalance(member) {
+      return Math.max(Number(member.fee || 0) - memberPaid(member.id), 0);
+    }
+
+    function daysLeft(expiryDate) {
+      const end = new Date(`${expiryDate}T23:59:59`);
+      const now = new Date();
+      return Math.ceil((end - now) / 86400000);
+    }
+
+    function memberStatus(member) {
+      const left = daysLeft(member.expiryDate);
+      if (left < 0) return "expired";
+      if (memberBalance(member) > 0) return "due";
+      return "active";
+    }
+
+    function inMonth(date, month) {
+      return String(date || "").startsWith(month);
+    }
+
+    function money(value) {
+      return `₹${numberFormat.format(Number(value || 0))}`;
+    }
+
+    function setView(view) {
+      activeView = view;
+      document.getElementById("viewTitle").textContent = titles[view][0];
+      document.getElementById("viewSubtitle").textContent = titles[view][1];
+      document.querySelectorAll("[data-view-button]").forEach(button => {
+        button.classList.toggle("active", button.dataset.viewButton === view);
+      });
+      render();
+    }
+
+    function openDashboardDetail(target) {
+      if (target === "payments") {
+        setView("payments");
+        return;
+      }
+
+      if (target === "expenses") {
+        setView("expenses");
+        return;
+      }
+
+      filters.query = "";
+      filters.status = target === "dues" ? "dues" : "all";
+      setView("members");
+    }
+
+    function cardKeyOpen(event, action) {
+      if (event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      action();
+    }
+
+    function render() {
+      if (activeView === "dashboard") renderDashboard();
+      if (activeView === "members") renderMembers();
+      if (activeView === "payments") renderPayments();
+      if (activeView === "expenses") renderExpenses();
+      refreshIcons();
+    }
+
+    function renderDashboard() {
+      const month = filters.month;
+      const payments = state.payments.filter(p => inMonth(p.date, month));
+      const expenses = state.expenses.filter(e => inMonth(e.date, month));
+      const revenue = payments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
+      const cost = expenses.reduce((sum, e) => sum + Number(e.amount || 0), 0);
+      const profit = revenue - cost;
+      const totalDues = state.members.reduce((sum, m) => sum + memberBalance(m), 0);
+      const activeCount = state.members.filter(m => memberStatus(m) === "active").length;
+      const expiring = state.members.filter(m => daysLeft(m.expiryDate) >= 0 && daysLeft(m.expiryDate) <= 7);
+      const overdue = state.members.filter(m => memberStatus(m) === "expired" || memberBalance(m) > 0);
+
+      document.getElementById("viewRoot").innerHTML = `
+        <section class="hero-dashboard">
+          <div>
+            <h3>${profit >= 0 ? "Profitable month" : "Watch the burn"}</h3>
+            <p>Realtime view of collections, expenses, dues, and renewal risk for Fitness Fusion.</p>
+          </div>
+          <div class="hero-profit">
+            <span>Net profit</span>
+            <strong>${money(profit)}</strong>
+          </div>
+        </section>
+        <div class="filters dashboard-controls">
+          <div class="field"><label>Month</label><input type="month" value="${month}" onchange="filters.month=this.value; render()"></div>
+          <button class="btn primary" onclick="openPaymentModal()"><i data-lucide="circle-dollar-sign"></i>Payment</button>
+          <button class="btn" onclick="openExpenseModal()"><i data-lucide="receipt-text"></i>Expense</button>
+        </div>
+        <div class="grid kpis dashboard-kpis">
+          ${metric("Monthly revenue", money(revenue), "Collected payments", "trending-up", "", "openDashboardDetail('payments')")}
+          ${metric("Monthly expenses", money(cost), "Operating cost", "trending-down", "", "openDashboardDetail('expenses')")}
+          ${metric("Pending dues", money(totalDues), `${overdue.length} members need follow-up`, "bell", "", "openDashboardDetail('dues')")}
+        </div>
+        <div class="grid two-col" style="margin-top:16px">
+          <section class="panel">
+            <div class="panel-title">
+              <h3>Income vs expenses</h3>
+              <span class="badge neutral">${month}</span>
+            </div>
+            ${renderChart()}
+          </section>
+          <section class="panel clickable-card" role="button" tabindex="0" onclick="openDashboardDetail('members')" onkeydown="cardKeyOpen(event, () => openDashboardDetail('members'))">
+            <div class="panel-title">
+              <h3>Member health</h3>
+              <span class="badge active">${activeCount} active</span>
+            </div>
+            <div class="list">
+              ${statRow("Active paid members", activeCount, "check-circle-2")}
+              ${statRow("Expiring in 7 days", expiring.length, "calendar-clock")}
+              ${statRow("Expired or payment due", overdue.length, "triangle-alert")}
+              ${statRow("Total members", state.members.length, "users")}
+            </div>
+          </section>
+          <section class="panel">
+            <div class="panel-title">
+              <h3>Follow-ups</h3>
+              <button class="btn" onclick="setView('members')"><i data-lucide="arrow-right"></i>Members</button>
+            </div>
+            <div class="list">${renderFollowups(overdue)}</div>
+          </section>
+          <section class="panel">
+            <div class="panel-title">
+              <h3>Recent cashflow</h3>
+              <button class="btn" onclick="setView('payments')"><i data-lucide="arrow-right"></i>Ledger</button>
+            </div>
+            <div class="list">${renderRecentCashflow()}</div>
+          </section>
+        </div>
+      `;
+    }
+
+    function metric(label, value, note, icon, className = "", action = "") {
+      const actionAttrs = action ? ` role="button" tabindex="0" onclick="${action}" onkeydown="cardKeyOpen(event, () => { ${action} })"` : "";
+      return `<article class="card metric ${className} ${action ? "clickable-card" : ""}"${actionAttrs}>
+        <p class="label">${label}<i data-lucide="${icon}"></i></p>
+        <strong>${value}</strong>
+        <small>${note}</small>
+      </article>`;
+    }
+
+    function statRow(label, value, icon) {
+      return `<div class="list-row"><div><strong>${label}</strong><span>Current database</span></div><span class="badge neutral"><i data-lucide="${icon}"></i>${value}</span></div>`;
+    }
+
+    function renderChart() {
+      const months = lastSixMonths();
+      const monthly = months.map(month => {
+        const income = state.payments.filter(p => inMonth(p.date, month.key)).reduce((sum, p) => sum + Number(p.amount || 0), 0);
+        const expense = state.expenses.filter(e => inMonth(e.date, month.key)).reduce((sum, e) => sum + Number(e.amount || 0), 0);
+        return { ...month, income, expense };
+      });
+      const maxValue = Math.max(...monthly.flatMap(m => [m.income, m.expense]), 1);
+      return `<div class="chart">
+        ${monthly.map(m => `
+          <div class="bar-group" title="${m.label}: income ${money(m.income)}, expense ${money(m.expense)}">
+            <div class="bars">
+              <span class="bar income" style="height:${Math.max((m.income / maxValue) * 100, 3)}%"></span>
+              <span class="bar expense" style="height:${Math.max((m.expense / maxValue) * 100, 3)}%"></span>
+            </div>
+            <div class="bar-label">${m.label}</div>
+          </div>
+        `).join("")}
+      </div>`;
+    }
+
+    function lastSixMonths() {
+      const result = [];
+      const base = new Date(`${filters.month || today.slice(0, 7)}-01T00:00:00`);
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(base.getFullYear(), base.getMonth() - i, 1);
+        result.push({
+          key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`,
+          label: d.toLocaleDateString("en-IN", { month: "short" })
+        });
+      }
+      return result;
+    }
+
+    function renderFollowups(members) {
+      if (!members.length) return `<div class="empty">No pending follow-ups.</div>`;
+      return members.slice(0, 6).map(member => {
+        const balance = memberBalance(member);
+        const status = memberStatus(member);
+        return `<div class="list-row">
+          <div><strong>${escapeHtml(member.name)}</strong><span>${statusLabel(member)} · Due ${money(balance)}</span></div>
+          <button class="btn icon" onclick="sendReminder('${member.id}')" aria-label="WhatsApp reminder"><i data-lucide="message-circle"></i></button>
+        </div>`;
+      }).join("");
+    }
+
+    function renderRecentCashflow() {
+      const rows = [
+        ...state.payments.map(p => ({ type: "income", date: p.date, title: memberName(p.memberId), amount: p.amount, note: p.mode })),
+        ...state.expenses.map(e => ({ type: "expense", date: e.date, title: e.title, amount: e.amount, note: e.category }))
+      ].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 7);
+      if (!rows.length) return `<div class="empty">No cashflow yet.</div>`;
+      return rows.map(row => `<div class="list-row">
+        <div><strong>${escapeHtml(row.title)}</strong><span>${row.date} · ${escapeHtml(row.note || "")}</span></div>
+        <span class="${row.type === "income" ? "amount-income" : "amount-expense"}">${row.type === "income" ? "+" : "-"}${money(row.amount)}</span>
+      </div>`).join("");
+    }
+
+    function renderMembers() {
+      const filtered = filteredMembers();
+      document.getElementById("viewRoot").innerHTML = `
+        <div class="filters">
+          <div class="field"><label>Search</label><input id="memberSearch" value="${escapeAttribute(filters.query)}" oninput="searchMembers(this.value)" placeholder="Name, phone, plan, trainer, notes"></div>
+          <div class="field"><label>Status</label><select onchange="filters.status=this.value; renderMembers()">${statusOptions()}</select></div>
+          <button class="btn primary" onclick="openMemberModal()"><i data-lucide="user-plus"></i>Member</button>
+        </div>
+        <div id="memberResults">${memberResultsHtml(filtered)}</div>
+      `;
+      refreshIcons();
+    }
+
+    function searchMembers(value) {
+      filters.query = value;
+      document.getElementById("memberResults").innerHTML = memberResultsHtml(filteredMembers());
+      refreshIcons();
+    }
+
+    function memberResultsHtml(list) {
+      return list.length ? `<div class="members-grid">${list.map(memberCard).join("")}</div>` : `<div class="empty">No members found.</div>`;
+    }
+
+    function filteredMembers() {
+      const q = filters.query.trim().toLowerCase();
+      return state.members.filter(member => {
+        const haystack = `${member.name} ${member.phone} ${member.plan} ${member.trainer} ${member.notes} ${member.goal}`.toLowerCase();
+        const matchesSearch = !q || haystack.includes(q);
+        const status = memberStatus(member);
+        const matchesStatus = filters.status === "all" || filters.status === status || (filters.status === "dues" && memberBalance(member) > 0);
+        return matchesSearch && matchesStatus;
+      }).sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    function statusOptions() {
+      const labels = { all: "All", active: "Active", due: "Due", expired: "Expired", dues: "Pending dues" };
+      return ["all", "active", "due", "expired", "dues"].map(status => `<option value="${status}" ${filters.status === status ? "selected" : ""}>${labels[status]}</option>`).join("");
+    }
+
+    function memberCard(member) {
+      const paid = memberPaid(member.id);
+      const balance = memberBalance(member);
+      const progress = Number(member.fee) ? Math.min((paid / Number(member.fee)) * 100, 100) : 0;
+      const status = memberStatus(member);
+      const note = member.notes || member.goal || "No personal notes added.";
+      return `<article class="card member-card ${status}">
+        <div class="member-head">
+          <div class="avatar">${escapeHtml(initials(member.name))}</div>
+          <div>
+            <strong>${escapeHtml(member.name)}</strong>
+            <span><i data-lucide="phone"></i> ${escapeHtml(member.phone)}</span>
+          </div>
+          ${statusBadge(member)}
+        </div>
+        <div class="member-facts">
+          <div class="fact"><span><i data-lucide="badge-check"></i>Plan</span><strong>${escapeHtml(member.plan)}</strong></div>
+          <div class="fact"><span><i data-lucide="user-round-check"></i>Trainer</span><strong>${escapeHtml(member.trainer || "General")}</strong></div>
+          <div class="fact"><span><i data-lucide="wallet"></i>Paid</span><strong>${money(paid)}</strong></div>
+          <div class="fact"><span><i data-lucide="calendar-clock"></i>Expiry</span><strong>${member.expiryDate}</strong></div>
+        </div>
+        <div>
+          <div class="progress"><span style="width:${progress}%"></span></div>
+          <div style="display:flex;justify-content:space-between;gap:10px;margin-top:7px;color:var(--muted);font-size:13px">
+            <span>${statusLabel(member)}</span>
+            <strong style="color:${balance > 0 ? "var(--warning)" : "var(--income)"}">${balance > 0 ? `${money(balance)} due` : "Paid"}</strong>
+          </div>
+        </div>
+        <div class="member-note"><i data-lucide="heart-pulse"></i> ${escapeHtml(note)}</div>
+        <div class="member-actions">
+          <button class="btn icon" onclick="openPaymentModal('${member.id}')" aria-label="Add payment" title="Add payment"><i data-lucide="circle-dollar-sign"></i></button>
+          <button class="btn icon" onclick="renewMember('${member.id}')" aria-label="Renew" title="Renew"><i data-lucide="repeat-2"></i></button>
+          <button class="btn icon" onclick="sendReminder('${member.id}')" aria-label="Reminder" title="Reminder"><i data-lucide="message-circle"></i></button>
+          <button class="btn icon" onclick="openMemberModal('${member.id}')" aria-label="Edit" title="Edit"><i data-lucide="pencil"></i></button>
+          ${isAdmin() ? `<button class="btn icon danger" onclick="deleteMember('${member.id}')" aria-label="Delete" title="Delete"><i data-lucide="trash-2"></i></button>` : ""}
+        </div>
+      </article>`;
+    }
+
+    function statusBadge(member) {
+      const status = memberStatus(member);
+      const icons = { active: "check-circle-2", due: "bell", expired: "circle-alert" };
+      return `<span class="badge ${status}"><i data-lucide="${icons[status]}"></i>${status[0].toUpperCase()}${status.slice(1)}</span>`;
+    }
+
+    function statusLabel(member) {
+      const left = daysLeft(member.expiryDate);
+      if (left < 0) return `${Math.abs(left)} days expired`;
+      if (left === 0) return "Expires today";
+      return `${left} days left`;
+    }
+
+    function initials(name) {
+      return String(name || "M")
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .map(part => part[0].toUpperCase())
+        .join("") || "M";
+    }
+
+    function renderPayments() {
+      const payments = state.payments.filter(p => inMonth(p.date, filters.month)).sort((a, b) => b.date.localeCompare(a.date));
+      document.getElementById("viewRoot").innerHTML = `
+        <div class="filters">
+          <div class="field"><label>Month</label><input type="month" value="${filters.month}" onchange="filters.month=this.value; renderPayments()"></div>
+          <div class="field"><label>Total</label><input value="${money(payments.reduce((sum, p) => sum + Number(p.amount || 0), 0))}" disabled></div>
+          <button class="btn primary" onclick="openPaymentModal()"><i data-lucide="circle-dollar-sign"></i>Payment</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Date</th><th>Member</th><th>Amount</th><th>Mode</th><th>Note</th><th>Actions</th></tr></thead>
+            <tbody>${payments.map(paymentRow).join("") || `<tr><td colspan="6"><div class="empty">No payments recorded.</div></td></tr>`}</tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function paymentRow(payment) {
+      return `<tr>
+        <td>${payment.date}</td>
+        <td class="name-cell"><strong>${escapeHtml(memberName(payment.memberId))}</strong><span>${escapeHtml(memberPhone(payment.memberId))}</span></td>
+        <td class="amount-income">${money(payment.amount)}</td>
+        <td>${escapeHtml(payment.mode)}</td>
+        <td>${escapeHtml(payment.note || "")}</td>
+        <td>${isAdmin() ? `<button class="btn icon danger" onclick="deletePayment('${payment.id}')" aria-label="Delete"><i data-lucide="trash-2"></i></button>` : `<span class="badge neutral">Locked</span>`}</td>
+      </tr>`;
+    }
+
+    function renderExpenses() {
+      const expenses = state.expenses.filter(e => inMonth(e.date, filters.month)).sort((a, b) => b.date.localeCompare(a.date));
+      const monthlyTotal = expenses.reduce((sum, e) => sum + Number(e.amount || 0), 0);
+      document.getElementById("viewRoot").innerHTML = `
+        <div class="filters">
+          <div class="field"><label>Month</label><input type="month" value="${filters.month}" onchange="filters.month=this.value; renderExpenses()"></div>
+          <div class="field"><label>Total</label><input value="${money(monthlyTotal)}" disabled></div>
+          <button class="btn primary" onclick="openExpenseModal()"><i data-lucide="receipt-text"></i>Expense</button>
+        </div>
+        <div class="grid two-col">
+          <section class="panel">
+            <div class="panel-title"><h3>Expense ledger</h3></div>
+            ${expenses.length ? `<div class="expense-grid">${expenses.map(expenseCard).join("")}</div>` : `<div class="empty">No expenses recorded.</div>`}
+          </section>
+          <section class="panel">
+            <div class="panel-title"><h3>By category</h3><span class="badge neutral">${filters.month}</span></div>
+            <div class="list">${expenseCategoryRows()}</div>
+          </section>
+        </div>
+      `;
+    }
+
+    function expenseCard(expense) {
+      return `<article class="card expense-card">
+        <div class="expense-head">
+          <div class="expense-icon"><i data-lucide="${expenseIcon(expense.category)}"></i></div>
+          <div>
+            <strong>${escapeHtml(expense.title)}</strong>
+            <span>${escapeHtml(expense.note || expense.category || "Expense")}</span>
+          </div>
+          <span class="amount-expense">${money(expense.amount)}</span>
+        </div>
+        <div class="expense-meta">
+          <span class="badge neutral"><i data-lucide="calendar-days"></i>${expense.date}</span>
+          <span class="badge due"><i data-lucide="tag"></i>${escapeHtml(expense.category)}</span>
+        </div>
+        <div class="member-actions">
+          <button class="btn icon" onclick="openExpenseModal('${expense.id}')" aria-label="Edit" title="Edit"><i data-lucide="pencil"></i></button>
+          ${isAdmin() ? `<button class="btn icon danger" onclick="deleteExpense('${expense.id}')" aria-label="Delete" title="Delete"><i data-lucide="trash-2"></i></button>` : ""}
+        </div>
+      </article>`;
+    }
+
+    function expenseIcon(category) {
+      const icons = {
+        Rent: "building-2",
+        Salary: "hand-coins",
+        Electricity: "zap",
+        Equipment: "dumbbell",
+        Marketing: "megaphone",
+        Maintenance: "wrench",
+        Other: "receipt-text"
+      };
+      return icons[category] || "receipt-text";
+    }
+
+    function expenseCategoryRows() {
+      const grouped = {};
+      state.expenses.filter(e => inMonth(e.date, filters.month)).forEach(expense => {
+        grouped[expense.category] = (grouped[expense.category] || 0) + Number(expense.amount || 0);
+      });
+      const rows = Object.entries(grouped).sort((a, b) => b[1] - a[1]);
+      if (!rows.length) return `<div class="empty">No expenses for this month.</div>`;
+      return rows.map(([category, amount]) => `<div class="list-row"><div><strong>${escapeHtml(category)}</strong><span>${filters.month}</span></div><span class="amount-expense">${money(amount)}</span></div>`).join("");
+    }
+
+    function openMemberModal(id = "") {
+      const form = document.getElementById("memberForm");
+      form.reset();
+      form.elements.joinDate.value = today;
+      updateMemberExpiry();
+      form.elements.initialPaid.value = 0;
+      document.getElementById("memberPaymentHistory").innerHTML = "";
+      document.getElementById("memberModalTitle").textContent = id ? "Edit member" : "Add member";
+
+      if (id) {
+        const member = state.members.find(m => m.id === id);
+        if (!member) return;
+        Object.entries(member).forEach(([key, value]) => {
+          if (form.elements[key]) form.elements[key].value = value;
+        });
+        if (!member.notes && member.goal) form.elements.notes.value = member.goal;
+        form.elements.id.value = id;
+        form.elements.expiryDate.value = planExpiry(form.elements.joinDate.value, form.elements.plan.value);
+        form.elements.initialPaid.disabled = true;
+        const payments = state.payments.filter(p => p.memberId === id).sort((a, b) => b.date.localeCompare(a.date));
+        document.getElementById("memberPaymentHistory").innerHTML = `
+          <div class="panel-title"><h3>Payment history</h3><span class="badge neutral">${money(memberPaid(id))}</span></div>
+          ${payments.map(p => `<div class="list-row"><div><strong>${money(p.amount)}</strong><span>${p.date} · ${escapeHtml(p.mode)} · ${escapeHtml(p.note || "")}</span></div></div>`).join("") || `<div class="empty">No payments yet.</div>`}
+        `;
+      } else {
+        form.elements.id.value = "";
+        form.elements.initialPaid.disabled = false;
+      }
+      openModal("memberModal");
+    }
+
+    function openPaymentModal(memberId = "") {
+      const form = document.getElementById("paymentForm");
+      form.reset();
+      form.elements.date.value = today;
+      form.elements.memberSelect.innerHTML = state.members
+        .slice()
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .map(member => `<option value="${member.id}" ${member.id === memberId ? "selected" : ""}>${escapeHtml(member.name)} · Balance ${money(memberBalance(member))}</option>`)
+        .join("");
+      form.elements.memberId.value = memberId;
+      openModal("paymentModal");
+    }
+
+    function openExpenseModal(id = "") {
+      const form = document.getElementById("expenseForm");
+      form.reset();
+      form.elements.date.value = today;
+      document.getElementById("expenseModalTitle").textContent = id ? "Edit expense" : "Add expense";
+      if (id) {
+        const expense = state.expenses.find(e => e.id === id);
+        if (!expense) return;
+        Object.entries(expense).forEach(([key, value]) => {
+          if (form.elements[key]) form.elements[key].value = value;
+        });
+      }
+      openModal("expenseModal");
+    }
+
+    function openModal(id) {
+      document.getElementById(id).classList.add("open");
+      document.getElementById(id).setAttribute("aria-hidden", "false");
+      refreshIcons();
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove("open");
+      document.getElementById(id).setAttribute("aria-hidden", "true");
+    }
+
+    document.getElementById("memberForm").elements.plan.addEventListener("change", updateMemberExpiry);
+    document.getElementById("memberForm").elements.joinDate.addEventListener("change", updateMemberExpiry);
+
+    document.getElementById("memberForm").addEventListener("submit", async event => {
+      event.preventDefault();
+      const form = event.currentTarget;
+      const data = Object.fromEntries(new FormData(form));
+      const id = data.id || newKey("members");
+      const member = {
+        name: data.name.trim(),
+        phone: data.phone.trim(),
+        plan: data.plan,
+        trainer: data.trainer.trim(),
+        joinDate: data.joinDate,
+        expiryDate: planExpiry(data.joinDate, data.plan),
+        fee: Number(data.fee || 0),
+        notes: data.notes.trim()
+      };
+      await set(ref(db, `members/${id}`), member);
+      if (!data.id) {
+        const initialPaid = Number(data.initialPaid || 0);
+        if (initialPaid > 0) {
+          await set(ref(db, `payments/${newKey("payments")}`), { memberId: id, amount: initialPaid, date: data.joinDate, mode: "Cash", note: "Joining payment" });
+        }
+      }
+      closeModal("memberModal");
+    });
+
+    document.getElementById("paymentForm").addEventListener("submit", async event => {
+      event.preventDefault();
+      const data = Object.fromEntries(new FormData(event.currentTarget));
+      const memberId = resolvePaymentMemberId(data);
+      if (!memberId) {
+        alert("Add a member before recording payments.");
+        return;
+      }
+      await set(ref(db, `payments/${newKey("payments")}`), {
+        memberId,
+        amount: Number(data.amount || 0),
+        date: data.date,
+        mode: data.mode,
+        note: data.note.trim()
+      });
+      closeModal("paymentModal");
+    });
+
+    function resolvePaymentMemberId(data) {
+      const selectedId = data.memberSelect || "";
+      const lockedId = data.memberId || "";
+      if (lockedId && state.members.some(member => member.id === lockedId)) return lockedId;
+      if (selectedId && state.members.some(member => member.id === selectedId)) return selectedId;
+      return "";
+    }
+
+    document.getElementById("expenseForm").addEventListener("submit", async event => {
+      event.preventDefault();
+      const data = Object.fromEntries(new FormData(event.currentTarget));
+      const id = data.id || newKey("expenses");
+      const expense = {
+        title: data.title.trim(),
+        amount: Number(data.amount || 0),
+        date: data.date,
+        category: data.category,
+        note: data.note.trim()
+      };
+      await set(ref(db, `expenses/${id}`), expense);
+      closeModal("expenseModal");
+    });
+
+    async function renewMember(id) {
+      const member = state.members.find(m => m.id === id);
+      if (!member) return;
+      await update(ref(db, `members/${id}`), {
+        joinDate: today,
+        expiryDate: addMonths(member.expiryDate > today ? member.expiryDate : today, planMonths(member.plan))
+      });
+    }
+
+    async function deleteMember(id) {
+      if (!requireAdmin("Deleting members")) return;
+      if (!confirm("Delete this member and their payments?")) return;
+      const removals = state.payments.filter(payment => payment.memberId === id).map(payment => remove(ref(db, `payments/${payment.id}`)));
+      await Promise.all([remove(ref(db, `members/${id}`)), ...removals]);
+    }
+
+    async function deletePayment(id) {
+      if (!requireAdmin("Deleting payments")) return;
+      if (!confirm("Delete this payment?")) return;
+      await remove(ref(db, `payments/${id}`));
+    }
+
+    async function deleteExpense(id) {
+      if (!requireAdmin("Deleting expenses")) return;
+      if (!confirm("Delete this expense?")) return;
+      await remove(ref(db, `expenses/${id}`));
+    }
+
+    function sendReminder(id) {
+      const member = state.members.find(m => m.id === id);
+      if (!member) return;
+      const balance = memberBalance(member);
+      const message = `Hi ${member.name}, this is Fitness Fusion. Your membership ${statusLabel(member).toLowerCase()} and pending balance is ${money(balance)}. Please complete payment or renew your plan.`;
+      const phone = member.phone.replace(/\D/g, "");
+      window.open(`https://wa.me/91${phone}?text=${encodeURIComponent(message)}`, "_blank");
+    }
+
+    function memberName(id) {
+      return state.members.find(member => member.id === id)?.name || "Deleted member";
+    }
+
+    function memberPhone(id) {
+      return state.members.find(member => member.id === id)?.phone || "";
+    }
+
+    function addMonths(dateString, months) {
+      const date = new Date(`${dateString}T00:00:00`);
+      date.setMonth(date.getMonth() + months);
+      return date.toISOString().slice(0, 10);
+    }
+
+    function exportData() {
+      if (!requireAdmin("Exporting data")) return;
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `fitness-fusion-${today}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+
+    async function resetDemoData() {
+      if (!requireAdmin("Resetting demo data")) return;
+      if (!confirm("Replace current Firebase data with demo data?")) return;
+      const fresh = demoData();
+      await Promise.all([
+        set(ref(db, "members"), toObject(fresh.members)),
+        set(ref(db, "payments"), toObject(fresh.payments)),
+        set(ref(db, "expenses"), toObject(fresh.expenses))
+      ]);
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "").replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[char]));
+    }
+
+    function escapeAttribute(value) {
+      return escapeHtml(value).replace(/`/g, "&#096;");
+    }
+
+    function refreshIcons() {
+      if (window.lucide) window.lucide.createIcons();
+    }
+
+    function friendlyAuthError(message) {
+      if (message.includes("auth/invalid-credential")) return "Invalid email or password.";
+      if (message.includes("auth/user-not-found")) return "No account found for this email.";
+      if (message.includes("auth/wrong-password")) return "Incorrect password.";
+      return message;
+    }
+
+    function capitalize(value) {
+      return String(value || "").charAt(0).toUpperCase() + String(value || "").slice(1);
+    }
+
+    async function logout() {
+      await signOut(auth);
+    }
+
+    window.setView = setView;
+    window.openMemberModal = openMemberModal;
+    window.openPaymentModal = openPaymentModal;
+    window.openExpenseModal = openExpenseModal;
+    window.closeModal = closeModal;
+    window.render = render;
+    window.renderMembers = renderMembers;
+    window.renderPayments = renderPayments;
+    window.renderExpenses = renderExpenses;
+    window.searchMembers = searchMembers;
+    window.openDashboardDetail = openDashboardDetail;
+    window.cardKeyOpen = cardKeyOpen;
+    window.renewMember = renewMember;
+    window.deleteMember = deleteMember;
+    window.deletePayment = deletePayment;
+    window.deleteExpense = deleteExpense;
+    window.sendReminder = sendReminder;
+    window.exportData = exportData;
+    window.resetDemoData = resetDemoData;
+    window.logout = logout;
+    window.filters = filters;
+
+    showLogin();
+  </script>
 </body>
 </html>
