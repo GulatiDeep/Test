@@ -115,6 +115,17 @@
       font-size: 13px;
     }
 
+    .form-message {
+      min-height: 22px;
+      color: var(--danger);
+      font-weight: 800;
+      font-size: 13px;
+    }
+
+    .form-message.success {
+      color: var(--income);
+    }
+
     .role-pill {
       display: inline-flex;
       align-items: center;
@@ -228,6 +239,116 @@
       align-items: center;
       gap: 10px;
       flex-wrap: wrap;
+      position: relative;
+    }
+
+    .btn.account-button {
+      width: 56px;
+      height: 56px;
+      border: 0;
+      border-radius: 999px;
+      padding: 0;
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 14px 30px rgba(15, 118, 110, .24);
+    }
+
+    .account-button *,
+    .quick-add-toggle * {
+      pointer-events: none;
+    }
+
+    .account-avatar {
+      width: 100%;
+      height: 100%;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      background: transparent;
+      color: #fff;
+    }
+
+    .btn.account-button.admin {
+      background: var(--danger);
+      box-shadow: 0 14px 30px rgba(185, 28, 28, .24);
+    }
+
+    .account-menu {
+      position: absolute;
+      top: calc(100% + 10px);
+      right: 0;
+      width: min(320px, calc(100vw - 24px));
+      display: none;
+      gap: 12px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      box-shadow: 0 18px 42px rgba(15, 23, 42, .18);
+      z-index: 140;
+    }
+
+    .account-menu.open {
+      display: grid;
+    }
+
+    .account-menu-head {
+      display: grid;
+      gap: 3px;
+    }
+
+    .account-menu-head strong,
+    .account-menu-head span {
+      display: block;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .account-menu-head span {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 2px;
+    }
+
+    .account-menu-actions {
+      display: grid;
+      gap: 8px;
+      padding-top: 10px;
+      border-top: 1px solid var(--line);
+    }
+
+    .account-menu-actions .btn {
+      width: 100%;
+      justify-content: flex-start;
+    }
+
+    .password-success {
+      padding: 18px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .success-panel {
+      display: grid;
+      grid-template-columns: 44px minmax(0, 1fr);
+      gap: 12px;
+      align-items: center;
+      padding: 14px;
+      border-radius: 8px;
+      border: 1px solid #bbf7d0;
+      background: #f0fdf4;
+    }
+
+    .success-panel span {
+      width: 44px;
+      height: 44px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      background: var(--income);
     }
 
     .btn {
@@ -943,12 +1064,12 @@
 
     .quick-add {
       position: fixed;
-      left: 16px;
+      right: 16px;
       bottom: 88px;
       z-index: 110;
       display: grid;
       gap: 10px;
-      justify-items: start;
+      justify-items: end;
     }
 
     .quick-add-menu {
@@ -1055,12 +1176,22 @@
         padding: 16px 12px calc(112px + env(safe-area-inset-bottom, 0px));
       }
       .topbar {
-        align-items: stretch;
-        flex-direction: column;
+        align-items: flex-start;
+        flex-direction: row;
       }
 
-      .toolbar .btn {
-        flex: 1 1 auto;
+      .topbar > div:first-child {
+        min-width: 0;
+      }
+
+      .topbar p {
+        font-size: 13px;
+        line-height: 1.35;
+      }
+
+      .toolbar {
+        flex: 0 0 auto;
+        margin-left: auto;
       }
 
       .filters { grid-template-columns: 1fr; }
@@ -1143,22 +1274,15 @@
       <form class="login-card" id="loginForm">
         <div>
           <h2>Login</h2>
-          <p>Choose your role and sign in with Firebase Auth.</p>
+          <p>Sign in with your user ID and password.</p>
         </div>
         <div class="field">
-          <label>Email</label>
-          <input id="loginEmail" type="email" autocomplete="email" required>
+          <label>User ID</label>
+          <input id="loginEmail" type="text" autocomplete="username" required>
         </div>
         <div class="field">
           <label>Password</label>
           <input id="loginPassword" type="password" autocomplete="current-password" required>
-        </div>
-        <div class="field">
-          <label>Login as</label>
-          <select id="loginRole">
-            <option value="admin">Admin</option>
-            <option value="manager">Manager</option>
-          </select>
         </div>
         <button class="btn primary" type="submit"><i data-lucide="log-in"></i>Login</button>
         <div class="login-error" id="loginError"></div>
@@ -1193,8 +1317,19 @@
           <p id="viewSubtitle">Profitability, dues, renewals, and attendance-ready member status.</p>
         </div>
         <div class="toolbar">
-          <span class="role-pill" id="rolePill"><i data-lucide="shield-check"></i>Loading</span>
-          <button class="btn" data-admin-only onclick="exportData()"><i data-lucide="download"></i>Export</button>
+          <button class="btn account-button" type="button" onclick="toggleAccountMenu(event)" aria-label="Account" aria-expanded="false" id="accountButton">
+            <span class="account-avatar" id="accountAvatar"><i data-lucide="user-round"></i></span>
+          </button>
+          <div class="account-menu" id="accountMenu">
+            <div class="account-menu-head">
+              <strong id="accountMenuName">User</strong>
+              <span id="accountMenuEmail">user@fitnessfusion.in</span>
+            </div>
+            <div class="account-menu-actions">
+              <button class="btn" type="button" onclick="openPasswordModal()"><i data-lucide="key-round"></i>Update password</button>
+              <button class="btn danger" type="button" onclick="logout()"><i data-lucide="log-out"></i>Logout</button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1215,7 +1350,7 @@
       <button class="btn" onclick="quickAddAction('payment')"><i data-lucide="indian-rupee"></i>New payment</button>
       <button class="btn" onclick="quickAddAction('expense')"><i data-lucide="receipt-text"></i>New expense</button>
     </div>
-    <button class="quick-add-toggle" onclick="toggleQuickAdd()" aria-label="Quick add"><i data-lucide="plus"></i></button>
+    <button class="quick-add-toggle" type="button" onclick="toggleQuickAdd(event)" aria-label="Quick add"><i data-lucide="plus"></i></button>
   </div>
 
   <div class="modal" id="memberModal" aria-hidden="true">
@@ -1304,10 +1439,50 @@
     </div>
   </div>
 
+  <div class="modal" id="passwordModal" aria-hidden="true">
+    <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="passwordModalTitle">
+      <header>
+        <h3 id="passwordModalTitle">Update password</h3>
+        <button class="btn icon" onclick="closeModal('passwordModal')" aria-label="Close"><i data-lucide="x"></i></button>
+      </header>
+      <form id="passwordForm">
+        <div class="form-grid">
+          <div class="member-form-hero">
+            <span><i data-lucide="shield-check"></i></span>
+            <div>
+              <strong id="accountRoleSummary">Logged in user</strong>
+              <small id="accountEmailSummary">Change your Firebase login password.</small>
+            </div>
+          </div>
+          <div class="field" style="grid-column:1 / -1"><label>Current password</label><input name="currentPassword" type="password" autocomplete="current-password" required></div>
+          <div class="field"><label>New password</label><input name="newPassword" type="password" autocomplete="new-password" required minlength="6"></div>
+          <div class="field"><label>Confirm new password</label><input name="confirmPassword" type="password" autocomplete="new-password" required minlength="6"></div>
+          <div class="form-message" id="passwordMessage" style="grid-column:1 / -1"></div>
+        </div>
+        <div class="form-actions">
+          <button class="btn" type="button" onclick="closeModal('passwordModal')">Cancel</button>
+          <button class="btn primary" type="submit"><i data-lucide="key-round"></i>Change password</button>
+        </div>
+      </form>
+      <div class="password-success hidden" id="passwordSuccess">
+        <div class="success-panel">
+          <span><i data-lucide="check"></i></span>
+          <div>
+            <strong>Password changed successfully</strong>
+            <small>Your new password is ready for the next login.</small>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn primary" type="button" onclick="closeModal('passwordModal')"><i data-lucide="check"></i>OK</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-    import { getDatabase, ref, push, onValue, set, update, remove, get } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+    import { EmailAuthProvider, getAuth, reauthenticateWithCredential, signInWithEmailAndPassword, onAuthStateChanged, signOut, updatePassword } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getDatabase, ref, push, onValue, set, remove, get } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyB7ihh-uTbj736XQTJq9HawOqNxALlWOk8",
@@ -1324,10 +1499,16 @@
     const db = getDatabase(firebaseApp);
     const numberFormat = new Intl.NumberFormat("en-IN", { maximumFractionDigits: 0 });
     const today = new Date().toISOString().slice(0, 10);
+    const currentMonthStart = today.slice(0, 8) + "01";
+    const currentMonthEnd = (() => {
+      const [year, month] = today.slice(0, 7).split("-").map(Number);
+      const lastDay = new Date(year, month, 0).getDate();
+      return `${today.slice(0, 7)}-${String(lastDay).padStart(2, "0")}`;
+    })();
     const state = { members: [], payments: [], expenses: [] };
     const session = { user: null, role: "manager", dataReady: false, unsubscribers: [] };
     let activeView = "dashboard";
-    let filters = { query: "", status: "all", month: today.slice(0, 7) };
+    let filters = { query: "", status: "all", startDate: currentMonthStart, endDate: currentMonthEnd };
 
     const titles = {
       dashboard: ["Dashboard", "Profitability, dues, renewals, and attendance-ready member status."],
@@ -1346,18 +1527,11 @@
       }
 
       try {
-        const requestedRole = localStorage.getItem("fitness-fusion-role") || "manager";
         const profileRef = ref(db, `users/${user.uid}`);
         const profileSnapshot = await get(profileRef);
         const profile = profileSnapshot.val();
 
-        if (profile?.role && profile.role !== requestedRole) {
-          await signOut(auth);
-          showLogin(`This account is registered as ${profile.role}. Choose ${profile.role} to login.`);
-          return;
-        }
-
-        session.role = profile?.role || requestedRole;
+        session.role = resolveUserRole(user.email, profile);
         if (!profile) {
           await set(profileRef, { email: user.email || "", role: session.role, createdAt: Date.now() });
         }
@@ -1371,14 +1545,26 @@
     document.getElementById("loginForm").addEventListener("submit", async event => {
       event.preventDefault();
       document.getElementById("loginError").textContent = "";
-      const role = document.getElementById("loginRole").value;
-      localStorage.setItem("fitness-fusion-role", role);
       try {
-        await signInWithEmailAndPassword(auth, document.getElementById("loginEmail").value, document.getElementById("loginPassword").value);
+        const email = loginEmailFromUserId(document.getElementById("loginEmail").value);
+        await signInWithEmailAndPassword(auth, email, document.getElementById("loginPassword").value);
       } catch (error) {
         document.getElementById("loginError").textContent = friendlyAuthError(error.message);
       }
     });
+
+    function loginEmailFromUserId(value) {
+      const userId = value.trim();
+      if (userId.includes("@")) return userId;
+      return `${userId}@fitnessfusion.in`;
+    }
+
+    function resolveUserRole(email, profile) {
+      const username = String(email || "").split("@")[0].toLowerCase();
+      if (username.includes("admin")) return "admin";
+      if (profile?.role) return profile.role;
+      return "manager";
+    }
 
     function showLogin(message = "") {
       session.user = null;
@@ -1387,6 +1573,7 @@
       document.getElementById("appShell").classList.add("hidden");
       document.querySelector(".mobile-tabs").classList.add("hidden");
       document.getElementById("quickAdd").classList.add("hidden");
+      toggleAccountMenu(false);
       document.getElementById("loginError").textContent = message;
       refreshIcons();
     }
@@ -1396,8 +1583,8 @@
       document.getElementById("appShell").classList.remove("hidden");
       document.querySelector(".mobile-tabs").classList.remove("hidden");
       document.getElementById("quickAdd").classList.remove("hidden");
-      document.getElementById("rolePill").innerHTML = `<i data-lucide="${isAdmin() ? "shield-check" : "badge-check"}"></i>${capitalize(session.role)}`;
-      document.getElementById("sidebarRole").textContent = `${capitalize(session.role)} workspace`;
+      document.getElementById("sidebarRole").textContent = "Gym operations";
+      updateAccountMenu();
       updateAdminControls();
       render();
     }
@@ -1439,13 +1626,11 @@
     }
 
     function isAdmin() {
-      return session.role === "admin";
+      return true;
     }
 
-    function requireAdmin(action = "This action") {
-      if (isAdmin()) return true;
-      alert(`${action} is available only for Admin login.`);
-      return false;
+    function requireAdmin() {
+      return true;
     }
 
     function updateAdminControls() {
@@ -1546,6 +1731,27 @@
       return String(date || "").startsWith(month);
     }
 
+    function inDateRange(date) {
+      const value = String(date || "");
+      if (!value) return false;
+      const start = filters.startDate || "0000-01-01";
+      const end = filters.endDate || "9999-12-31";
+      const from = start <= end ? start : end;
+      const to = start <= end ? end : start;
+      return value >= from && value <= to;
+    }
+
+    function dateRangeControls(renderCall) {
+      return `
+        <div class="field"><label>Start date</label><input type="date" value="${filters.startDate}" onchange="filters.startDate=this.value; ${renderCall}()"></div>
+        <div class="field"><label>End date</label><input type="date" value="${filters.endDate}" onchange="filters.endDate=this.value; ${renderCall}()"></div>
+      `;
+    }
+
+    function dateRangeLabel() {
+      return `${filters.startDate} to ${filters.endDate}`;
+    }
+
     function money(value) {
       return `₹${numberFormat.format(Number(value || 0))}`;
     }
@@ -1591,12 +1797,13 @@
     }
 
     function renderDashboard() {
-      const month = filters.month;
-      const payments = state.payments.filter(p => inMonth(p.date, month));
-      const expenses = state.expenses.filter(e => inMonth(e.date, month));
+      const payments = state.payments.filter(p => inDateRange(p.date));
+      const expenses = state.expenses.filter(e => inDateRange(e.date));
       const revenue = payments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
       const cost = expenses.reduce((sum, e) => sum + Number(e.amount || 0), 0);
       const profit = revenue - cost;
+      const profitLabel = profit >= 0 ? "Net Profit" : "Net Loss";
+      const profitAmount = profit >= 0 ? money(profit) : money(Math.abs(profit));
       const totalDues = state.members.reduce((sum, m) => sum + memberBalance(m), 0);
       const activeCount = state.members.filter(m => memberStatus(m) === "active").length;
       const expiring = state.members.filter(m => daysLeft(m.expiryDate) >= 0 && daysLeft(m.expiryDate) <= 7);
@@ -1609,12 +1816,12 @@
             <p>Realtime view of collections, expenses, dues, and renewal risk for Fitness Fusion.</p>
           </div>
           <div class="hero-profit">
-            <span>Net profit</span>
-            <strong>${money(profit)}</strong>
+            <span>${profitLabel}</span>
+            <strong>${profitAmount}</strong>
           </div>
         </section>
         <div class="filters dashboard-controls">
-          <div class="field"><label>Month</label><input type="month" value="${month}" onchange="filters.month=this.value; render()"></div>
+          ${dateRangeControls("render")}
         </div>
         <div class="grid kpis dashboard-kpis">
           ${metric("Monthly revenue", money(revenue), "Collected payments", "trending-up", "", "openDashboardDetail('payments')")}
@@ -1625,7 +1832,7 @@
           <section class="panel">
             <div class="panel-title">
               <h3>Income vs expenses</h3>
-              <span class="badge neutral">${month}</span>
+              <span class="badge neutral">${dateRangeLabel()}</span>
             </div>
             ${renderChart()}
           </section>
@@ -1695,7 +1902,7 @@
 
     function lastSixMonths() {
       const result = [];
-      const base = new Date(`${filters.month || today.slice(0, 7)}-01T00:00:00`);
+      const base = new Date(`${(filters.endDate || today).slice(0, 7)}-01T00:00:00`);
       for (let i = 5; i >= 0; i--) {
         const d = new Date(base.getFullYear(), base.getMonth() - i, 1);
         result.push({
@@ -1722,7 +1929,7 @@
       const rows = [
         ...state.payments.map(p => ({ type: "income", date: p.date, title: memberName(p.memberId), amount: p.amount, note: p.mode })),
         ...state.expenses.map(e => ({ type: "expense", date: e.date, title: e.title, amount: e.amount, note: e.category }))
-      ].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 7);
+      ].filter(row => inDateRange(row.date)).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 7);
       if (!rows.length) return `<div class="empty">No cashflow yet.</div>`;
       return rows.map(row => `<div class="list-row">
         <div><strong>${escapeHtml(row.title)}</strong><span>${row.date} · ${escapeHtml(row.note || "")}</span></div>
@@ -1820,10 +2027,10 @@
     }
 
     function renderPayments() {
-      const payments = state.payments.filter(p => inMonth(p.date, filters.month)).sort((a, b) => b.date.localeCompare(a.date));
+      const payments = state.payments.filter(p => inDateRange(p.date)).sort((a, b) => b.date.localeCompare(a.date));
       document.getElementById("viewRoot").innerHTML = `
         <div class="filters">
-          <div class="field"><label>Month</label><input type="month" value="${filters.month}" onchange="filters.month=this.value; renderPayments()"></div>
+          ${dateRangeControls("renderPayments")}
           <div class="field"><label>Total</label><input value="${money(payments.reduce((sum, p) => sum + Number(p.amount || 0), 0))}" disabled></div>
         </div>
         <div class="table-wrap">
@@ -1847,11 +2054,11 @@
     }
 
     function renderExpenses() {
-      const expenses = state.expenses.filter(e => inMonth(e.date, filters.month)).sort((a, b) => b.date.localeCompare(a.date));
+      const expenses = state.expenses.filter(e => inDateRange(e.date)).sort((a, b) => b.date.localeCompare(a.date));
       const monthlyTotal = expenses.reduce((sum, e) => sum + Number(e.amount || 0), 0);
       document.getElementById("viewRoot").innerHTML = `
         <div class="filters">
-          <div class="field"><label>Month</label><input type="month" value="${filters.month}" onchange="filters.month=this.value; renderExpenses()"></div>
+          ${dateRangeControls("renderExpenses")}
           <div class="field"><label>Total</label><input value="${money(monthlyTotal)}" disabled></div>
         </div>
         <div class="grid two-col">
@@ -1860,7 +2067,7 @@
             ${expenses.length ? `<div class="expense-grid">${expenses.map(expenseCard).join("")}</div>` : `<div class="empty">No expenses recorded.</div>`}
           </section>
           <section class="panel">
-            <div class="panel-title"><h3>By category</h3><span class="badge neutral">${filters.month}</span></div>
+            <div class="panel-title"><h3>By category</h3><span class="badge neutral">${dateRangeLabel()}</span></div>
             <div class="list">${expenseCategoryRows()}</div>
           </section>
         </div>
@@ -1903,12 +2110,12 @@
 
     function expenseCategoryRows() {
       const grouped = {};
-      state.expenses.filter(e => inMonth(e.date, filters.month)).forEach(expense => {
+      state.expenses.filter(e => inDateRange(e.date)).forEach(expense => {
         grouped[expense.category] = (grouped[expense.category] || 0) + Number(expense.amount || 0);
       });
       const rows = Object.entries(grouped).sort((a, b) => b[1] - a[1]);
-      if (!rows.length) return `<div class="empty">No expenses for this month.</div>`;
-      return rows.map(([category, amount]) => `<div class="list-row"><div><strong>${escapeHtml(category)}</strong><span>${filters.month}</span></div><span class="amount-expense">${money(amount)}</span></div>`).join("");
+      if (!rows.length) return `<div class="empty">No expenses for this period.</div>`;
+      return rows.map(([category, amount]) => `<div class="list-row"><div><strong>${escapeHtml(category)}</strong><span>${dateRangeLabel()}</span></div><span class="amount-expense">${money(amount)}</span></div>`).join("");
     }
 
     function openMemberModal(id = "") {
@@ -1981,12 +2188,48 @@
       refreshIcons();
     }
 
+    function toggleAccountMenu(eventOrForceOpen) {
+      if (eventOrForceOpen?.stopPropagation) eventOrForceOpen.stopPropagation();
+      const forceOpen = typeof eventOrForceOpen === "boolean" ? eventOrForceOpen : undefined;
+      const menu = document.getElementById("accountMenu");
+      const button = document.getElementById("accountButton");
+      const shouldOpen = typeof forceOpen === "boolean" ? forceOpen : !menu.classList.contains("open");
+      menu.classList.toggle("open", shouldOpen);
+      button.setAttribute("aria-expanded", String(shouldOpen));
+      if (shouldOpen) updateAccountMenu();
+      refreshIcons();
+    }
+
+    function updateAccountMenu() {
+      const email = session.user?.email || "";
+      const userName = email ? email.split("@")[0] : "User";
+      document.getElementById("accountMenuName").textContent = userName;
+      document.getElementById("accountMenuEmail").textContent = email || "Not available";
+      document.getElementById("accountButton").classList.toggle("admin", session.role === "admin");
+    }
+
+    function openPasswordModal() {
+      toggleAccountMenu(false);
+      const form = document.getElementById("passwordForm");
+      form.reset();
+      form.classList.remove("hidden");
+      document.getElementById("passwordSuccess").classList.add("hidden");
+      const message = document.getElementById("passwordMessage");
+      message.textContent = "";
+      message.classList.remove("success");
+      document.getElementById("accountRoleSummary").textContent = `${capitalize(session.role)} account`;
+      document.getElementById("accountEmailSummary").textContent = session.user?.email || "Change your Firebase login password.";
+      openModal("passwordModal");
+    }
+
     function closeModal(id) {
       document.getElementById(id).classList.remove("open");
       document.getElementById(id).setAttribute("aria-hidden", "true");
     }
 
-    function toggleQuickAdd(forceOpen) {
+    function toggleQuickAdd(eventOrForceOpen) {
+      if (eventOrForceOpen?.stopPropagation) eventOrForceOpen.stopPropagation();
+      const forceOpen = typeof eventOrForceOpen === "boolean" ? eventOrForceOpen : undefined;
       const quickAdd = document.getElementById("quickAdd");
       const shouldOpen = typeof forceOpen === "boolean" ? forceOpen : !quickAdd.classList.contains("open");
       quickAdd.classList.toggle("open", shouldOpen);
@@ -2004,6 +2247,13 @@
       const quickAdd = document.getElementById("quickAdd");
       if (!quickAdd || quickAdd.classList.contains("hidden") || quickAdd.contains(event.target)) return;
       quickAdd.classList.remove("open");
+    });
+
+    document.addEventListener("click", event => {
+      const menu = document.getElementById("accountMenu");
+      const button = document.getElementById("accountButton");
+      if (!menu || !button || menu.contains(event.target) || button.contains(event.target)) return;
+      toggleAccountMenu(false);
     });
 
     ["plan", "joinDate", "planDiscount", "oneTimeDiscount", "initialPaid"].forEach(fieldName => {
@@ -2085,6 +2335,37 @@
       closeModal("expenseModal");
     });
 
+    document.getElementById("passwordForm").addEventListener("submit", async event => {
+      event.preventDefault();
+      const form = event.currentTarget;
+      const message = document.getElementById("passwordMessage");
+      const data = Object.fromEntries(new FormData(form));
+      message.classList.remove("success");
+      message.textContent = "";
+
+      if (data.newPassword !== data.confirmPassword) {
+        message.textContent = "New password and confirmation do not match.";
+        return;
+      }
+
+      if (!session.user?.email) {
+        message.textContent = "Login session not found. Please logout and login again.";
+        return;
+      }
+
+      try {
+        const credential = EmailAuthProvider.credential(session.user.email, data.currentPassword);
+        await reauthenticateWithCredential(session.user, credential);
+        await updatePassword(session.user, data.newPassword);
+        form.reset();
+        form.classList.add("hidden");
+        document.getElementById("passwordSuccess").classList.remove("hidden");
+        refreshIcons();
+      } catch (error) {
+        message.textContent = friendlyPasswordError(error.message);
+      }
+    });
+
     async function deleteMember(id) {
       if (!requireAdmin("Deleting members")) return;
       if (!confirm("Delete this member and their payments?")) return;
@@ -2127,17 +2408,6 @@
       return date.toISOString().slice(0, 10);
     }
 
-    function exportData() {
-      if (!requireAdmin("Exporting data")) return;
-      const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `fitness-fusion-${today}.json`;
-      link.click();
-      URL.revokeObjectURL(url);
-    }
-
     async function resetDemoData() {
       if (!requireAdmin("Resetting demo data")) return;
       if (!confirm("Replace current Firebase data with demo data?")) return;
@@ -2168,6 +2438,13 @@
       return message;
     }
 
+    function friendlyPasswordError(message) {
+      if (message.includes("auth/invalid-credential") || message.includes("auth/wrong-password")) return "Current password is incorrect.";
+      if (message.includes("auth/weak-password")) return "New password is too weak. Use at least 6 characters.";
+      if (message.includes("auth/requires-recent-login")) return "Please logout, login again, and then change your password.";
+      return message;
+    }
+
     function capitalize(value) {
       return String(value || "").charAt(0).toUpperCase() + String(value || "").slice(1);
     }
@@ -2180,6 +2457,8 @@
     window.openMemberModal = openMemberModal;
     window.openPaymentModal = openPaymentModal;
     window.openExpenseModal = openExpenseModal;
+    window.toggleAccountMenu = toggleAccountMenu;
+    window.openPasswordModal = openPasswordModal;
     window.closeModal = closeModal;
     window.render = render;
     window.renderMembers = renderMembers;
@@ -2194,7 +2473,6 @@
     window.deletePayment = deletePayment;
     window.deleteExpense = deleteExpense;
     window.sendReminder = sendReminder;
-    window.exportData = exportData;
     window.resetDemoData = resetDemoData;
     window.logout = logout;
     window.filters = filters;
