@@ -61,6 +61,10 @@
     display:flex; align-items:center; opacity:.8;
   }
   .del-btn svg{width:16px; height:16px; stroke:var(--danger); fill:none;}
+  .kebab-btn{
+    border:none; background:transparent; color:var(--muted); font-size:16px; padding:4px 5px; cursor:pointer;
+    flex-shrink:0; line-height:1;
+  }
   .del-btn:active{opacity:1;}
   .star-btn{
     border:none; background:transparent; padding:4px 5px; cursor:pointer; flex-shrink:0; font-size:17px;
@@ -123,6 +127,15 @@
   .lc-item.yt .lc-icon{background:#fdeaec; color:#e2536b;}
   .lc-icon svg{width:15px; height:15px;}
   .lc-label{font-size:13px; color:var(--text); word-break:break-word; flex:1;}
+  .help-box{max-height:80vh;}
+  .help-list{overflow-y:auto; padding:14px 16px;}
+  .help-item{display:flex; gap:12px; align-items:flex-start; margin-bottom:16px; font-size:13px; line-height:1.5; color:var(--text);}
+  .help-item:last-child{margin-bottom:4px;}
+  .help-icon{
+    flex-shrink:0; width:30px; height:30px; border-radius:50%; background:var(--blue-light); color:var(--blue);
+    display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700;
+  }
+  .import-info{padding:10px 10px 4px; font-size:12.5px; color:var(--muted); line-height:1.5;}
   .progress-wrap .label{
     font-size:11px; color:var(--muted); margin-bottom:4px; display:flex; justify-content:space-between; align-items:center; gap:8px;
   }
@@ -209,6 +222,7 @@
 <header>
   <div class="top-row">
     <h1>📘 Study To Do List</h1>
+    <button class="icon-btn" id="helpBtn">?</button>
     <button class="icon-btn" id="menuBtn">⋯</button>
     <button class="icon-btn" id="addSectionBtn">＋</button>
   </div>
@@ -248,6 +262,50 @@
   </div>
 </div>
 
+<div id="helpModal" class="link-chooser-overlay" style="display:none">
+  <div class="link-chooser-box help-box">
+    <div class="link-chooser-header">
+      <span>How this app works</span>
+      <button type="button" id="helpClose">✕</button>
+    </div>
+    <div class="help-list">
+      <div class="help-item"><span class="help-icon">✓</span><div><b>Tap the checkbox</b> to mark a topic done — it moves into the collapsible Completed strip at the bottom of its heading.</div></div>
+      <div class="help-item"><span class="help-icon">✎</span><div><b>Tap any text</b> (topic, heading, or section) to rename it in place.</div></div>
+      <div class="help-item"><span class="help-icon">⠿</span><div><b>Drag the handle</b> to reorder, or drop a topic onto a heading list / section list to promote it — or drop a heading/section into a lower list to demote it.</div></div>
+      <div class="help-item"><span class="help-icon">★</span><div><b>Star</b> a topic to mark it high-priority — find them all in the Starred tab.</div></div>
+      <div class="help-item"><span class="help-icon">📝</span><div><b>Note icon</b> opens a big note box. Paste a link inside and a Play/Open button appears next to the topic automatically.</div></div>
+      <div class="help-item"><span class="help-icon">⋮</span><div><b>Heading/section menu</b> lets you bulk mark-all-done, mark-all-pending, star-all, or unstar-all in one tap.</div></div>
+      <div class="help-item"><span class="help-icon">↔</span><div><b>Swipe left/right</b> (or tap the tabs) to jump between All, Pending, Completed, and Starred.</div></div>
+      <div class="help-item"><span class="help-icon">⬆</span><div><b>Export / Import</b> (⋯ menu) saves or restores your whole checklist as a file — the only true backup independent of this browser.</div></div>
+    </div>
+  </div>
+</div>
+
+<div id="bulkMenu" class="link-chooser-overlay" style="display:none">
+  <div class="link-chooser-box">
+    <div class="link-chooser-header">
+      <span id="bulkMenuTitle">Bulk actions</span>
+      <button type="button" id="bulkMenuClose">✕</button>
+    </div>
+    <div class="link-chooser-list" id="bulkMenuList"></div>
+  </div>
+</div>
+
+<div id="importChoiceModal" class="link-chooser-overlay" style="display:none">
+  <div class="link-chooser-box">
+    <div class="link-chooser-header">
+      <span>Import backup</span>
+      <button type="button" id="icClose">✕</button>
+    </div>
+    <div class="link-chooser-list">
+      <div class="import-info" id="importInfo"></div>
+      <button type="button" class="lc-item" id="icReplace"><span class="lc-label">🔁 Replace everything</span></button>
+      <button type="button" class="lc-item" id="icMerge"><span class="lc-label">➕ Merge — add new topics only</span></button>
+      <button type="button" class="lc-item" id="icCancel"><span class="lc-label" style="color:var(--muted)">Cancel</span></button>
+    </div>
+  </div>
+</div>
+
 <main id="app"></main>
 
 <script>
@@ -266,12 +324,15 @@ function defaultData(){
 
 let data = load();
 
+function migrateData(d){
+  return d;
+}
 function load(){
   try{
     const raw = localStorage.getItem(STORAGE_KEY);
     if(raw){
       const parsed = JSON.parse(raw);
-      if(parsed && Array.isArray(parsed.sections)) return parsed;
+      if(parsed && Array.isArray(parsed.sections)) return migrateData(parsed);
     }
   }catch(e){ console.warn("load failed", e); }
   return defaultData();
@@ -688,6 +749,94 @@ function closeLinkChooser(){
   document.getElementById('linkChooser').style.display = 'none';
 }
 
+function collectItemsForScope(scope, id){
+  if(scope === 'group'){
+    const found = findGroup(id); if(!found) return [];
+    return found.grp.items;
+  }
+  if(scope === 'section'){
+    const s = findSection(id); if(!s) return [];
+    let arr = [];
+    s.groups.forEach(g=>{ arr = arr.concat(g.items); });
+    return arr;
+  }
+  return [];
+}
+function bulkSetDone(scope, id, done){
+  const items = collectItemsForScope(scope, id);
+  items.forEach(it=>{ it.done = done; });
+  save(); render();
+  showInfoToast(`${done?'Marked done':'Marked pending'}: ${items.length} topic${items.length===1?'':'s'}`);
+}
+function bulkSetStar(scope, id, val){
+  const items = collectItemsForScope(scope, id);
+  items.forEach(it=>{ it.priority = val; });
+  save(); render();
+  showInfoToast(`${val?'Starred':'Unstarred'} ${items.length} topic${items.length===1?'':'s'}`);
+}
+function openBulkMenu(scope, id){
+  document.getElementById('bulkMenuTitle').textContent = scope === 'section' ? 'Section — bulk actions' : 'Heading — bulk actions';
+  const list = document.getElementById('bulkMenuList');
+  list.innerHTML = '';
+  const actions = [
+    ['✓ Mark all as done', ()=>bulkSetDone(scope, id, true)],
+    ['○ Mark all as pending', ()=>bulkSetDone(scope, id, false)],
+    ['★ Star all', ()=>bulkSetStar(scope, id, true)],
+    ['☆ Unstar all', ()=>bulkSetStar(scope, id, false)],
+  ];
+  actions.forEach(([label, fn])=>{
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'lc-item';
+    btn.innerHTML = `<span class="lc-label">${label}</span>`;
+    btn.addEventListener('click', ()=>{ fn(); closeBulkMenu(); });
+    list.appendChild(btn);
+  });
+  document.getElementById('bulkMenu').style.display = 'flex';
+}
+function closeBulkMenu(){
+  document.getElementById('bulkMenu').style.display = 'none';
+}
+
+let pendingImportData = null;
+
+function countTotalItems(d){
+  let n = 0;
+  d.sections.forEach(s=>s.groups.forEach(g=>{ n += g.items.length; }));
+  return n;
+}
+
+function mergeImport(parsed){
+  let added = 0, skipped = 0;
+  parsed.sections.forEach(incSec=>{
+    let sec = data.sections.find(s=>s.title.trim().toLowerCase() === incSec.title.trim().toLowerCase());
+    if(!sec){
+      sec = section(incSec.title, []);
+      data.sections.push(sec);
+    }
+    incSec.groups.forEach(incGrp=>{
+      let grp = sec.groups.find(g=>g.title.trim().toLowerCase() === incGrp.title.trim().toLowerCase());
+      if(!grp){
+        grp = group(incGrp.title, []);
+        sec.groups.push(grp);
+      }
+      incGrp.items.forEach(incItem=>{
+        const exists = grp.items.some(i=>i.text.trim().toLowerCase() === incItem.text.trim().toLowerCase());
+        if(exists){ skipped++; return; }
+        const newItem = { ...incItem, id: uid('i') };
+        grp.items.push(newItem);
+        added++;
+      });
+    });
+  });
+  save(); render();
+  showInfoToast(`Merged: ${added} new topic${added===1?'':'s'} added, ${skipped} duplicate${skipped===1?'':'s'} skipped`);
+}
+function closeImportChoice(){
+  pendingImportData = null;
+  document.getElementById('importChoiceModal').style.display = 'none';
+}
+
 function render(){
   const app = document.getElementById('app');
   const term = document.getElementById('search').value.trim().toLowerCase();
@@ -740,6 +889,7 @@ function render(){
         ${dragEnabled ? '<span class="handle sec-handle">⠿</span>' : '<span class="handle" style="visibility:hidden">⠿</span>'}
         <span class="chev toggle-sec">▾</span>
         <span class="title editable" data-kind="section" data-id="${s.id}">${escapeHtml(s.title)}</span>
+        <button class="kebab-btn" data-act="bulkMenu" data-scope="section" data-id="${s.id}" title="Bulk actions">⋮</button>
         <button class="del-btn" data-act="delSec" data-id="${s.id}">${TRASH_SVG}</button>
       </div>
       <div class="progress-wrap">
@@ -764,6 +914,7 @@ function render(){
           ${dragEnabled ? '<span class="handle grp-handle">⠿</span>' : '<span class="handle" style="visibility:hidden">⠿</span>'}
           <span class="chev toggle-grp">▾</span>
           <span class="title editable" data-kind="group" data-id="${g.id}">${escapeHtml(g.title)}</span>
+          <button class="kebab-btn" data-act="bulkMenu" data-scope="group" data-id="${g.id}" title="Bulk actions">⋮</button>
           <button class="del-btn" data-act="delGrp" data-id="${g.id}">${TRASH_SVG}</button>
         </div>
         <div class="progress-wrap">
@@ -954,6 +1105,7 @@ document.getElementById('app').addEventListener('click', (e)=>{
     else if(act==='addItem') addItem(id);
     else if(act==='toggleStar') toggleStar(id);
     else if(act==='toggleNote') toggleNote(id);
+    else if(act==='bulkMenu') openBulkMenu(btn.dataset.scope, id);
     return;
   }
 
@@ -991,6 +1143,21 @@ document.getElementById('app').addEventListener('focusout', (e)=>{
 document.getElementById('lcClose').addEventListener('click', closeLinkChooser);
 document.getElementById('linkChooser').addEventListener('click', (e)=>{
   if(e.target.id === 'linkChooser') closeLinkChooser();
+});
+
+document.getElementById('helpBtn').addEventListener('click', ()=>{
+  document.getElementById('helpModal').style.display = 'flex';
+});
+document.getElementById('helpClose').addEventListener('click', ()=>{
+  document.getElementById('helpModal').style.display = 'none';
+});
+document.getElementById('helpModal').addEventListener('click', (e)=>{
+  if(e.target.id === 'helpModal') document.getElementById('helpModal').style.display = 'none';
+});
+
+document.getElementById('bulkMenuClose').addEventListener('click', closeBulkMenu);
+document.getElementById('bulkMenu').addEventListener('click', (e)=>{
+  if(e.target.id === 'bulkMenu') closeBulkMenu();
 });
 
 document.getElementById('search').addEventListener('input', (e)=>{
@@ -1076,13 +1243,39 @@ document.getElementById('importFile').addEventListener('change', (e)=>{
     try{
       const parsed = JSON.parse(reader.result);
       if(!parsed || !Array.isArray(parsed.sections)) throw new Error("Invalid file format");
-      if(confirm("Import this backup? This will replace your current checklist.")){
+      migrateData(parsed);
+      const currentTotal = countAll().total;
+      if(currentTotal === 0){
         data = parsed; save(); render();
+        showInfoToast(`Imported ${countTotalItems(parsed)} topics`);
+        return;
       }
+      pendingImportData = parsed;
+      const incomingTotal = countTotalItems(parsed);
+      document.getElementById('importInfo').textContent =
+        `Your tracker currently has ${currentTotal} topic${currentTotal===1?'':'s'}. This file contains ${incomingTotal} topic${incomingTotal===1?'':'s'}. Choose how to import:`;
+      document.getElementById('importChoiceModal').style.display = 'flex';
     }catch(err){ alert("Import failed: " + err.message); }
   };
   reader.readAsText(file);
   e.target.value = '';
+});
+document.getElementById('icReplace').addEventListener('click', ()=>{
+  if(pendingImportData){
+    data = pendingImportData;
+    save(); render();
+    showInfoToast(`Replaced — now ${countAll().total} topics`);
+  }
+  closeImportChoice();
+});
+document.getElementById('icMerge').addEventListener('click', ()=>{
+  if(pendingImportData) mergeImport(pendingImportData);
+  closeImportChoice();
+});
+document.getElementById('icCancel').addEventListener('click', closeImportChoice);
+document.getElementById('icClose').addEventListener('click', closeImportChoice);
+document.getElementById('importChoiceModal').addEventListener('click', (e)=>{
+  if(e.target.id === 'importChoiceModal') closeImportChoice();
 });
 document.getElementById('resetBtn').addEventListener('click', ()=>{
   if(confirm("Reset ALL progress and structure back to the original syllabus? Export a backup first if unsure.")){
