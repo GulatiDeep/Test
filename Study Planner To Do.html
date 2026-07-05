@@ -153,6 +153,21 @@
   }
   .add-link:active{opacity:1;}
   .empty-msg{padding:30px 10px; text-align:center; color:var(--muted); font-size:13px;}
+  .empty-state{
+    padding:50px 24px; text-align:center; display:flex; flex-direction:column; align-items:center; gap:6px;
+  }
+  .empty-icon{font-size:44px; margin-bottom:6px;}
+  .empty-state h2{font-size:17px; margin:0 0 4px; color:var(--text);}
+  .empty-state p{font-size:13px; color:var(--muted); margin:0 0 6px; max-width:320px; line-height:1.5;}
+  .empty-state .empty-or{font-size:11px; color:var(--muted); margin:8px 0;}
+  .btn-primary{
+    background:var(--blue); color:#fff; border:none; padding:12px 22px; border-radius:12px;
+    font-size:14px; font-weight:700; cursor:pointer; width:100%; max-width:280px;
+  }
+  .btn-secondary{
+    background:var(--blue-light); color:var(--blue); border:none; padding:10px 20px; border-radius:12px;
+    font-size:13px; font-weight:600; cursor:pointer; width:100%; max-width:280px;
+  }
   .sortable-ghost{opacity:.4;}
   .sortable-chosen{box-shadow:0 2px 10px rgba(47,111,237,.25);}
   .menu{
@@ -245,17 +260,7 @@ function group(title, items){ return { id: uid("g"), title, collapsed:false, don
 function section(title, groups){ return { id: uid("s"), title, collapsed:false, groups }; }
 
 function defaultData(){
-  const d = { sections: [
-    section("Demo Section", [
-      group("Demo Group-1", [
-        "Demo Topic-1","Demo Topic-2"
-      ].map(item)),
-      
-      
-    ]),
-  ]};
-  d.sections.forEach(s=>{ s.collapsed = true; s.groups.forEach(g=>{ g.collapsed = true; }); });
-  return d;
+  return { sections: [] };
 }
 
 
@@ -690,7 +695,20 @@ function render(){
   app.innerHTML = "";
 
   if(data.sections.length===0){
-    app.innerHTML = '<div class="empty-msg">No sections yet. Tap ＋ to add one.</div>';
+    app.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">📘</div>
+        <h2>Welcome to Study To Do List</h2>
+        <p>This app is empty — start by importing a checklist backup (.json) you already have, or build one from scratch.</p>
+        <button id="emptyImportBtn" class="btn-primary">⬆ Import backup</button>
+        <p class="empty-or">— or —</p>
+        <button id="emptyAddSectionBtn" class="btn-secondary">＋ Add your first section</button>
+      </div>
+    `;
+    document.getElementById('emptyImportBtn').addEventListener('click', ()=>{
+      document.getElementById('importFile').click();
+    });
+    document.getElementById('emptyAddSectionBtn').addEventListener('click', addSection);
     renderStatsOnly();
     return;
   }
