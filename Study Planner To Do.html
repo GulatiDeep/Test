@@ -1201,6 +1201,17 @@ document.getElementById('collapseAllBtn').addEventListener('click', ()=>{
   menu.classList.remove('open');
 });
 
+function backupFilename(){
+  const d = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  const dd = pad(d.getDate());
+  const mm = pad(d.getMonth() + 1);
+  const yy = pad(d.getFullYear() % 100);
+  const hh = pad(d.getHours());
+  const min = pad(d.getMinutes());
+  return `Study_ToDo_List_${dd}${mm}${yy}_${hh}${min}.json`;
+}
+
 document.getElementById('exportBtn').addEventListener('click', ()=>{
   menu.classList.remove('open');
   try{
@@ -1209,7 +1220,7 @@ document.getElementById('exportBtn').addEventListener('click', ()=>{
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'study-todo-backup.json';
+    a.download = backupFilename();
     a.rel = 'noopener';
     document.body.appendChild(a);
     a.click();
